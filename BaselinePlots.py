@@ -19,6 +19,7 @@ class BaselinePlots(PlotsBase):
         ROOT.gROOT.cd(name)
 
         parser = OptionParser()
+        parser.add_option("--splitChannels", dest="splitChannels", action="store_true", default=False)
 #        parser.add_option("--channel", dest="channel",  help="channel", choices=[ "mu", "el" ], default="mu")
 #        parser.add_option("--metht", dest="metht",  help="MET/HT cut", type=float, default=150.)
 #        parser.add_option("--isrPt", dest="isrPt",  help="isrJetPt cut", type=float, default=None)
@@ -30,10 +31,13 @@ class BaselinePlots(PlotsBase):
         ( self.options, args ) = parser.parse_args(argv)
         assert len(args)==0
 
-        # self.flavours = [ "" ]
-        self.flavours = [ "Ele", "Mu" ]
+        if self.options.splitChannels:
+            self.flavours = [ "Ele", "Mu" ]
+        else:
+            self.flavours = [ "" ]
         for flv in self.flavours:
             self.addVariable("before"+flv,1,0.5,1.5,'b')
+            self.addVariable("metPhi"+flv,90,-math.pi,math.pi,'b')
             self.addVariable("nTightLep"+flv,10,-0.5,9.5,'u')
             self.addVariable("nVetoLep"+flv,10,-0.5,9.5,'u')
             self.addVariable("nJet30"+flv,20,-0.5,19.5,'l')
@@ -41,6 +45,7 @@ class BaselinePlots(PlotsBase):
             self.addVariable("ptJet2"+flv,100,0.,1000.,'l')
             self.addVariable("ht"+flv,100,0.,2500.,'l')
             self.addVariable("lt"+flv,100,0.,2500.,'l')
+            self.addVariable("nBJet"+flv,10,-0.5,9.5,'b')
             self.addVariable("after"+flv,1,0.5,1.5,'b')
 
 #        self.charges = [ "Minus", "Plus" ]
@@ -146,6 +151,8 @@ class BaselinePlots(PlotsBase):
             pdgLep = 0
         self.fill1DByFlavour("before",pdgLep,1,w)
 
+        self.fill1DByFlavour("metPhi",pdgLep,eh.get("met_phi"),w)
+
         ht = eh.get("htJet30j")
         self.fill1DByFlavour("ht",pdgLep,ht,w)
         if ht<500:
@@ -182,7 +189,9 @@ class BaselinePlots(PlotsBase):
         self.fill1DByFlavour("lt",pdgLep,lt,w)
         if lt<250:
             return
-        
+
+        self.fill1DByFlavour("nBJet",pdgLep,eh.get("nBJetMedium30"),w)
+
         self.fill1DByFlavour("after",pdgLep,1,w)
 
     def showTimers(self):

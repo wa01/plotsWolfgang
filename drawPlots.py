@@ -116,16 +116,40 @@ else:
 #                              kfactor=1.19))
 #    samples.append(Sample("T2DegStop_300_270",sampleBase,type="S",color=1,line=2,fill=False))
 #    samples.append(Sample("T2DegStop_300_240",sampleBase,type="S",color=1,line=4,fill=False))
+    samples.append(Sample("QCD",sampleBase,type="B",color=8,fill=True,kfactor=1., \
+                              namelist=["QCD_HT200to300", \
+                                            "QCD_HT300to500", \
+                                            "QCD_HT500to700", \
+                                            "QCD_HT700to1000", \
+                                            "QCD_HT1000to1500", \
+                                            "QCD_HT1500to2000", \
+                                            "QCD_HT2000toInf" ], \
+                              baseweights=lumi ))
     samples.append(Sample("DYJetsToLL",sampleBase,type="B",color=5,fill=True, \
                               kfactor=1., \
                               namelist=["DYJetsToLL_M50_HT100to200", \
                                         "DYJetsToLL_M50_HT200to400", \
                                         "DYJetsToLL_M50_HT400to600", \
                                         "DYJetsToLL_M50_HT600toInf" ], \
-                              baseweights=[lumi/2575735, lumi/906398, \
-                                           lumi/1001355, lumi/982658] ))
-    samples.append(Sample("TTJets_LO_25ns",sampleBase,type="B",color=2,fill=True, \
-                              kfactor=1.,baseweights=lumi/11313265 ))
+                              baseweights=[lumi, lumi, lumi, lumi] ))
+    samples.append(Sample("singleTop",sampleBase,type="B",color=ROOT.kRed-7,fill=True,kfactor=1., \
+                              namelist=["TToLeptons_sch", \
+                                        "TToLeptons_tch", \
+                                        "T_tWch", \
+                                        "TBar_tWch" ], \
+                              baseweights=lumi ))
+    samples.append(Sample("TTJets_LO_25ns",sampleBase,type="B",color=ROOT.kRed,fill=True, \
+                              kfactor=1.,baseweights=lumi ))
+    samples.append(Sample("WJetsToLNu",sampleBase,type="B",color=4,fill=True, \
+                              kfactor=1., \
+                              namelist=["WJetsToLNu_HT100to200", \
+                                        "WJetsToLNu_HT200to400", \
+                                        "WJetsToLNu_HT400to600", \
+                                        "WJetsToLNu_HT600to800", \
+                                        "WJetsToLNu_HT800to1200", \
+                                        "WJetsToLNu_HT1200to2500", \
+                                        "WJetsToLNu_HT2500toInf" ], \
+                              baseweights=7*[lumi] ))
     if options.data:
         samples.append(Sample("data",sampleBase,type="D",color=1,fill=False))
 

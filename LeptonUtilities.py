@@ -231,7 +231,7 @@ class DiLepVV:
 
 
 def isGoodJet(eh,idx):
-  return eh.get("Jet_pt")[idx]>25 and abs(eh.get("Jet_eta")[idx])<2.4
+  return eh.get("Jet_pt")[idx]>30 and abs(eh.get("Jet_eta")[idx])<2.4
 
 def goodJets(eh):
   return [ i for i in range(len(eh.get("Jet_pt"))) if isGoodJet(eh,i) ]

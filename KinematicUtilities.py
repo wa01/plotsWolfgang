@@ -54,3 +54,26 @@ def toPolFrame(p4Parent,p4Daughter):
     p4Dmod.Transform(rot)
 #    p4Dmod.Print()
     return p4Dmod
+
+class LepNuSystem:
+
+    def __init__(self,metPt,metPhi,lepPt,lepPhi,lepEta,lepPdg):
+        self.met = ROOT.TLorentzVector()
+        self.met.SetPtEtaPhi(metPt,0.,metPhi,0.)
+        self.lepton = ROOT.TLorentzVector()
+        self.lepton.SetPtEtaPhi(lepPt,lepEta,lepPhi,0.)
+        self.lepPdg = lepPdg
+        self.w = self.met + self.lepton
+
+    def pt(self):
+        return w.Pt()
+
+    def mt(self):
+        dphi = self.lepton.Phi() - self.met.Phi()
+        return sqrt(2.*self.lepton.Pt()*self.met.Pt()*(1-cos(dphi)))
+
+    def phi(self):
+        return w.Phi()
+
+    def dPhi(self):
+        return self.lepton.Phi() - self.w.Phi()

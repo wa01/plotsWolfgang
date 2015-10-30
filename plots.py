@@ -40,7 +40,7 @@ def isVetoLepton(e,idx):
         return abs(eta)<2.4
 
 def isGoodJet(e,idx):
-    return e.Jet_pt[idx]>25 and abs(e.Jet_eta[idx])<2.4
+    return e.Jet_pt[idx]>30 and abs(e.Jet_eta[idx])<2.4
 
 def createCountHistogram(hCounts,name):
     assert not name in [ x[0] for x in hCounts ]
