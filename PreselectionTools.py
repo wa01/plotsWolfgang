@@ -3,164 +3,111 @@ from EventHelper import EventHelper
 from KinematicUtilities import *
 from LeptonUtilities import *
 
-isrJetPtMin = 110
-njet60Max = 2
-type1phiMetMin = 200.
-htMin = 300.
-isrJetBTBVeto = True
-softIsolatedPtMin = ( 7., 5. )
-vetoIsolatedPtMin = ( 20., 20. )
-softIsolatedPtMax = ( 30., 30. )
-hardIsolatedPtMin = ( 30., 30. )
-softIsolatedEtaMax = ( 999., 999. )
-regionIndices = { "SR1a" : 0, "SR1b" : 1, "SR1c" : 2, "SR2" : 3,
-                  "CR1a" : 4, "CR1b" : 5, "CR1c" : 6, "CR2" : 7 }
+htMin = 500.
+ltMin = 250.
+nJetMin = 4
+ptJet2Min = 80.
+ptLeptonHardMin = 25.
+ptLeptonSoftMin = 10.
 
-def passesHadronicSelection(eh,recalculatedMet=None):
-    isrJetPt = eh.get("isrJetPt")
-    if math.isnan(isrJetPt) or isrJetPt<isrJetPtMin:
-        return False
+class RA40bSelection:
 
-    met = eh.get("type1phiMet") if recalculatedMet==None else recalculatedMet
-    if math.isnan(isrJetPt) or met<type1phiMetMin:
-        return False
+    regions = {
+        'R1' : ( [ 5, 6 ], [ 250, 350 ], [ 500, None ], 1.00 ), \
+        'R2' : ( [ 5, 6 ], [ 350, 450 ], [ 500, None ], 1.00 ), \
+        'R3' : ( [ 5, 6 ], [ 450, None ], [ 500, None ], 1.00 ), \
+        'R4' : ( [ 6, 8 ], [ 250, 350 ], [ 500, 750 ], 1.00 ), \
+        'R5' : ( [ 6, 8 ], [ 250, 350 ], [ 750, None ], 1.00 ), \
+        'R6' : ( [ 6, 8 ], [ 350, 450 ], [ 500, 750 ], 1.00 ), \
+        'R7' : ( [ 6, 8 ], [ 350, 450 ], [ 750, None ], 1.00 ), \
+        'R8' : ( [ 6, 8 ], [ 450, None ], [ 500, 1000 ], 0.75 ), \
+        'R9' : ( [ 6, 8 ], [ 450, None ], [ 1000, None ], 0.75 ), \
+        'R10' : ( [ 8, None ], [ 250, 350 ], [ 500, 750 ], 1.00 ), \
+        'R11' : ( [ 8, None ], [ 250, 350 ], [ 750, None ], 1.00 ), \
+        'R12' : ( [ 8, None ], [ 350, 450 ], [ 500, None ], 0.75 ), \
+        'R13' : ( [ 8, None ], [ 450, None ], [ 500, None ], 0.75 ) }
+    regionLabels = sorted(regions.keys(),key = lambda x: int(x[1:]))
 
-    if eh.get("njet60")>njet60Max:
-        return False
+    def __init__(self):
+        self.reset()
 
-#
-# match with HT-binned W+jets sample
-#
-    if eh.get("ht")<htMin:
-        return False
+    def reset(self):
+        self.tightLeptons = None
+        self.vetoLeptons = None
+        self.leptonPt = None
+        self.leptonPhi = None
+        self.leptonEta = None
+        self.leptonPdg = None
+        self.met = None
+        self.metPhi = None
+        self.wkin = None
+        self.lt = None
+        self.goodJets = None
+        self.ht = None
 
-    assert not math.isnan(eh.get("isrJetBTBVetoPassed"))
-    if isrJetBTBVeto and eh.get("isrJetBTBVetoPassed")==0:
-        return False
+    def set(self,eh):
+        self.tightLeptons = tightLeptons(eh,ptmin=25.)
+        if len(self.tightLeptons)>0:
+            idx = self.tightLeptons[0]
+            self.leptonPt = eh.get("LepGood_pt")[idx]
+            self.leptonPhi = eh.get("LepGood_phi")[idx]
+            self.leptonEta = eh.get("LepGood_eta")[idx]
+            self.leptonPdg = eh.get("LepGood_pdgId")[idx]
+        self.vetoLeptons = vetoLeptons(eh,ptmin=10.,pttight=25.)
+        self.met = eh.get("met_pt")
+        self.metPhi = eh.get("met_phi")
+        if self.leptonPt!=None:
+            self.wkin = LepNuSystem(self.met,self.metPhi,self.leptonPt,self.leptonPhi,self.leptonEta,self.leptonPdg)
+            self.lt = self.wkin.lt()
 
-    return True
-
-def selectedLepton(eh,leptonPdg,mode="all"):
-
-    leptonSel = mode.lower()
-
-    leptons = ( ( 11, "el" ) , ( 13, "mu" ) )
-    leptonIndex = None
-    for i,l in enumerate(leptons):
-        if abs(leptonPdg)==l[0]:
-            leptonIndex = i
-            leptonPrefix = l[1]
-            break
-    assert leptonIndex!=None
-
-    if eh.get("nHardTaus")>0:
-        return None
-
-    if abs(leptonPdg)==11:
-        if eh.get("nHardMuonsMediumWP")>0:
-            return None
-        ileptons = isolatedElectrons(eh,ptmin=softIsolatedPtMin[leptonIndex], \
-                                         etamax=softIsolatedEtaMax[leptonIndex])
-    else:
-        if eh.get("nHardElectrons")>0:
-            return None
-#        mediumMuIndex = int(eh.get("mediumMuIndex"))
-#        if mediumMuIndex<0:
-#            return None
-        ileptons = isolatedMuons(eh,ptmin=softIsolatedPtMin[leptonIndex], \
-                                     etamax=softIsolatedEtaMax[leptonIndex])
-
-    if len(ileptons)==0:
-        return None        
-    ilepton = ileptons[0]
-
-    leptonEtas = eh.get(leptonPrefix+"Eta")
-    if abs(leptonEtas[ilepton])>softIsolatedEtaMax[leptonIndex]:
-        return None
-
-    leptonPts = eh.get(leptonPrefix+"Pt")
-    leptonPt = leptonPts[ilepton]
-    # require minimum Pt
-    if leptonPt<softIsolatedPtMin[leptonIndex]:
-        return None
-
-    # veto other leptons above 20GeV
-    for j in ileptons[1:]:
-        if leptonPts[j]>vetoIsolatedPtMin[leptonIndex]:
-            return None
-    
-    if leptonSel=="soft":
-        if leptonPt>softIsolatedPtMax[leptonIndex]:
-            return None
-    elif leptonSel=="hard":
-        if leptonPt<hardIsolatedPtMin[leptonIndex]:
-            return None
-            
-    return ( ilepton, leptonPrefix )
-
-def bjetMultiplicity(eh):
-    njet = int(eh.get("njetCount")+0.5)
-    jetPts = eh.get("jetPt")
-    jetEtas = eh.get("jetEta")
-    jetBtags = eh.get("jetBtag")
-    nbsoft = 0
-    nbhard = 0
-    for i in range(njet):
-        if jetPts[i]>30 and abs(jetEtas[i])<2.4 and jetBtags[i]>0.679:
-            if jetPts[i]<60:
-                nbsoft += 1
-            else:
-                nbhard += 1
-    return (nbsoft,nbhard)
-    
-def signalOrControlRegion(eh,ilep,prefix):
-    # btags
-    nbsoft, nbhard = bjetMultiplicity(eh)
-    nball = nbsoft + nbhard
-
-    met = eh.get("type1phiMet")
-    if met<300.:
-        return None
-
-    # R1
-    if nball==0 and eh.get("ht")>400:
-        softLepPt = eh.get(prefix+"Pt")[ilep]
-        softLepPhi = eh.get(prefix+"Phi")[ilep]
-        metphi = eh.get("type1phiMetphi")
-        mt = math.sqrt(2*met*softLepPt*(1-math.cos(metphi-softLepPhi)))
-        if mt<60:
-            return "R1a"
-        elif mt>88:
-            return "R1c"
-        else:
-            return "R1b"
-
-    # CR2
-    if nbsoft>0 and nbhard==0:
-        if eh.get("isrJetPt")>325:
-            return "R2"
+        self.goodJets = goodJets(eh)
+        self.ht = eh.get("htJet30j")
+                        
+    def inBin(self,x,rng):
+        if rng[0]!=None and x<rng[0]:
+            return False
+        if rng[1]!=None and x>=rng[1]:
+            return False
+        return True
         
-    return None
+    def preselection(self):
+        if len(self.tightLeptons)!=1:
+            return False
 
-def signalRegion(eh,ilep,prefix):
-    region = signalOrControlRegion(eh,ilep,prefix)
-    if region==None:
-        return region
+        if len(self.vetoLeptons)>0:
+            return False
 
-    softLepPt = eh.get(prefix+"Pt")[ilep]
-    if softLepPt>5. and softLepPt<30.:
-        if eh.get(prefix+"Pdg")[ilep]>0:
-            return "S"+region
+        if len(self.goodJets)<4:
+            return False
 
-    return None
+        if self.ht<500.:
+            return False
 
-def controlRegion(eh,ilep,prefix):
-    region = signalOrControlRegion(eh,ilep,prefix)
-    if region==None:
-        return region
+        if self.lt<250:
+            return False
 
-    softLepPt = eh.get(prefix+"Pt")[ilep]
-    if softLepPt>30.:
-        return "C"+region
+        return True
 
-    return None
+    def region(self):
+        if not self.preselection():
+            return None
+
+        result = None
+        for r in RA40bSelection.regions:
+            if self.inBin(len(self.goodJets),RA40bSelection.regions[r][0]) and \
+               self.inBin(self.lt,RA40bSelection.regions[r][1]) and \
+               self.inBin(self.ht,RA40bSelection.regions[r][2]):
+                assert result==None
+                result = r
+
+        if result==None:
+            return None
+
+        dphi = self.wkin.dPhi()
+        if dphi<RA40bSelection.regions[r][3]:
+            result = "C" + result
+        else:
+            result = "S" + result
+
+        return result
+

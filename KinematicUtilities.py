@@ -59,14 +59,17 @@ class LepNuSystem:
 
     def __init__(self,metPt,metPhi,lepPt,lepPhi,lepEta,lepPdg):
         self.met = ROOT.TLorentzVector()
-        self.met.SetPtEtaPhi(metPt,0.,metPhi,0.)
+        self.met.SetPtEtaPhiM(metPt,0.,metPhi,0.)
         self.lepton = ROOT.TLorentzVector()
-        self.lepton.SetPtEtaPhi(lepPt,lepEta,lepPhi,0.)
+        self.lepton.SetPtEtaPhiM(lepPt,lepEta,lepPhi,0.)
         self.lepPdg = lepPdg
         self.w = self.met + self.lepton
 
     def pt(self):
         return w.Pt()
+
+    def lt(self):
+        return self.met.Pt() + self.lepton.Pt()
 
     def mt(self):
         dphi = self.lepton.Phi() - self.met.Phi()

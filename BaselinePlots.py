@@ -6,13 +6,14 @@ from PlotsBase import *
 from EventHelper import EventHelper
 from LeptonUtilities import *
 from KinematicUtilities import deltaR
-
+from PreselectionTools import *
 
 class BaselinePlots(PlotsBase):
 
     def __init__(self,name,preselection=None,elist=None,elistBase="./elists",rebin=None,argv=[]):
         PlotsBase.__init__(self,name,preselection,elist=elist,elistBase=elistBase,rebin=rebin)
         self.histogramList = { }
+        self.cutflowList = { }
         curdir = ROOT.gDirectory
         if not ROOT.gROOT.Get(name):
             ROOT.gROOT.mkdir(name)
@@ -46,7 +47,11 @@ class BaselinePlots(PlotsBase):
             self.addVariable("ht"+flv,100,0.,2500.,'l')
             self.addVariable("lt"+flv,100,0.,2500.,'l')
             self.addVariable("nBJet"+flv,10,-0.5,9.5,'b')
+            self.addVariable("dPhi"+flv,63,0.,3.15,'l')
+            self.addVariable("CSRs"+flv,27,-13.5,13.5,'b')
             self.addVariable("after"+flv,1,0.5,1.5,'b')
+
+        self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet4","jet2Pt80","lt250"])
 
 #        self.charges = [ "Minus", "Plus" ]
 #        self.charges = [ "" ]
@@ -132,6 +137,8 @@ class BaselinePlots(PlotsBase):
 #        self.addVariable("softDiMuM",150,0.,150.,'b')
         curdir.cd()
 
+        self.selection = RA40bSelection()
+
     def fill(self,eh,sample,itree):
 
 
@@ -150,6 +157,7 @@ class BaselinePlots(PlotsBase):
         else:
             pdgLep = 0
         self.fill1DByFlavour("before",pdgLep,1,w)
+        self.passedCut("all",w)
 
         self.fill1DByFlavour("metPhi",pdgLep,eh.get("met_phi"),w)
 
@@ -157,12 +165,14 @@ class BaselinePlots(PlotsBase):
         self.fill1DByFlavour("ht",pdgLep,ht,w)
         if ht<500:
             return
+        self.passedCut("ht500",w)
 
         tightLeps = tightLeptons(eh)
         nTightLep = len(tightLeps)
         self.fill1DByFlavour("nTightLep",pdgLep,nTightLep,w)
         if nTightLep!=1:
             return
+        self.passedCut("oneTightLep",w)
 
         # now lepton flavour is defined
         if len(self.flavours)==2:
@@ -173,25 +183,47 @@ class BaselinePlots(PlotsBase):
         self.fill1DByFlavour("nVetoLep",pdgLep,nVetoLep,w)
         if nVetoLep>0:
             return
+        self.passedCut("noVetoLep",w)
 
         goodJs = goodJets(eh)
         nGoodJs = len(goodJs)
         self.fill1DByFlavour("nJet30",pdgLep,nGoodJs,w)
         if nGoodJs<4:
             return
+        self.passedCut("njet4",w)
 
         self.fill1DByFlavour("ptJet1",pdgLep,eh.get("Jet_pt")[goodJs[0]],w)
         self.fill1DByFlavour("ptJet2",pdgLep,eh.get("Jet_pt")[goodJs[1]],w)
         if eh.get("Jet_pt")[goodJs[1]]<80.:
             return
+        self.passedCut("jet2Pt80",w)
 
         lt = eh.get("met_pt") + eh.get("LepGood_pt")[tightLeps[0]]
         self.fill1DByFlavour("lt",pdgLep,lt,w)
         if lt<250:
             return
+        self.passedCut("lt250",w)
 
         self.fill1DByFlavour("nBJet",pdgLep,eh.get("nBJetMedium30"),w)
 
+        self.selection.set(eh)
+        lt2 = self.selection.wkin.lt()
+        assert abs(lt2-lt)/lt<0.00001
+        dphi = self.selection.wkin.dPhi()
+        self.fill1DByFlavour("dPhi",pdgLep,abs(dphi),w)
+
+        if nGoodJs<5:
+            return
+        region = self.selection.region()
+        if region==None:
+            self.fill1DByFlavour("CSRs",pdgLep,0.,w)
+        else:
+            assert region[0]=="C" or region[0]=="S"
+            if region[0]=="C":
+                self.fill1DByFlavour("CSRs",pdgLep,-int(region[2:]),w)
+            else:
+                self.fill1DByFlavour("CSRs",pdgLep,int(region[2:]),w)
+            
         self.fill1DByFlavour("after",pdgLep,1,w)
 
     def showTimers(self):
@@ -203,4 +235,7 @@ class BaselinePlots(PlotsBase):
             
     def histograms(self):
         return self.histogramList
+
+    def cutflows(self):
+        return self.cutflowList
         

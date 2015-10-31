@@ -3,6 +3,7 @@ import time
 import os
 from EventHelper import EventHelper
 from Variable import *
+from CutFlow import *
 
 class MyTimer:
     def __init__(self):
@@ -47,6 +48,7 @@ class MyTimer:
 class PlotsBase:
 
     variables = { }
+    cutflows = { }
 
     def getVariables(self):
         return PlotsBase.variables
@@ -66,6 +68,18 @@ class PlotsBase:
         h1d = PlotsBase.variables[name].createHistogram(binEdges)
         self.histogramList[name] = h1d
         setattr(self,"h"+name,h1d)
+
+    def getCutFlows(self):
+        return PlotsBase.cutflows
+
+    def addCutFlow(self,labels,nameFlow="DefaultCutFlow"):
+        assert nameFlow.isalnum()
+        assert not nameFlow in self.cutflowList
+        if not nameFlow in PlotsBase.cutflows:
+            PlotsBase.cutflows[nameFlow] = CutFlow(nameFlow,labels)
+        h = PlotsBase.cutflows[nameFlow].createHistogram()
+        self.cutflowList[nameFlow] = h
+        setattr(self,"c"+nameFlow,h)
 
     def addVariablePair(self,xname,nbinsx,xmin,xmax,yname,nbinsy,ymin,ymax,uselog=True,suffix=None):
         varPair = VariablePair(xname,nbinsx/self.rebin,xmin,xmax,yname,nbinsy/self.rebin,ymin,ymax, \
@@ -242,3 +256,7 @@ class PlotsBase:
 
     def fill2D(self,name,xvalue,yvalue,weight):
         self.fill2DBySign(name,0,xvalue,yvalue,weight)
+
+    def passedCut(self,label,w,nameFlow="DefaultCutFlow"):
+        flow = PlotsBase.cutflows[nameFlow]
+        self.cutflowList[nameFlow].Fill(flow.index(label),w)

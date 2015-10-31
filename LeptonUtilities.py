@@ -14,9 +14,9 @@ def isTightLepton(eh,idx,ptmin=25.):
     else:
         return abs(eta)<2.4 and miniRelIso<0.2 and eh.get("LepGood_mediumMuonId")[idx]==1 and eh.get("LepGood_sip3d")[idx]<4.
 
-def isVetoLepton(eh,idx,ptmin=10.):
+def isVetoLepton(eh,idx,ptmin=10.,pttight=25.):
 
-    if isTightLepton(eh,idx):
+    if isTightLepton(eh,idx,ptmin=pttight):
         return False
 
     pdgId = abs(eh.get("LepGood_pdgId")[idx])
@@ -34,8 +34,8 @@ def isVetoLepton(eh,idx,ptmin=10.):
 def tightLeptons(eh,ptmin=25.):
   return [ i for i in range(len(eh.get("LepGood_pdgId"))) if isTightLepton(eh,i,ptmin) ]
 
-def vetoLeptons(eh,ptmin=10.):
-  return [ i for i in range(len(eh.get("LepGood_pdgId"))) if isVetoLepton(eh,i,ptmin) ]
+def vetoLeptons(eh,ptmin=10.,pttight=25.):
+  return [ i for i in range(len(eh.get("LepGood_pdgId"))) if isVetoLepton(eh,i,ptmin,pttight) ]
 
 def isolatedMuons(eh,ptmin=5.,etamax=1.5,wp="medium"):
   imus = [ ]

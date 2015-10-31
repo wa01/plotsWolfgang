@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import ROOT
-import os,sys,string
+import os,sys,string,math
 from fnmatch import fnmatch
 from Sample import *
 #from drawWithFOM import *
@@ -116,6 +116,7 @@ else:
 #                              kfactor=1.19))
 #    samples.append(Sample("T2DegStop_300_270",sampleBase,type="S",color=1,line=2,fill=False))
 #    samples.append(Sample("T2DegStop_300_240",sampleBase,type="S",color=1,line=4,fill=False))
+
     samples.append(Sample("QCD",sampleBase,type="B",color=8,fill=True,kfactor=1., \
                               namelist=["QCD_HT200to300", \
                                             "QCD_HT300to500", \
@@ -153,10 +154,12 @@ else:
     if options.data:
         samples.append(Sample("data",sampleBase,type="D",color=1,fill=False))
 
+
 ROOT.TH1.SetDefaultSumw2()
 
 allplots = [ ]
 variables = { }
+cutflows = { }
 for s in samples:
     plots = plotClass(s.name,presel,elist=options.elist,elistBase=elistbase,rebin=options.rebin,argv=plotClassArguments)
     if options.fomByBin:
@@ -171,7 +174,12 @@ for s in samples:
     for varname in variables:
         variables[varname][1].append(plots.histograms()[varname])
 #    print s.name," : ",plots.hdr.GetSumOfWeights()
-
+    if len(cutflows)==0:
+        cutflowNames = plots.getCutFlows()
+        for cfname in cutflowNames:
+            cutflows[cfname] = ( plots.getCutFlows()[cfname] , [ ] )
+    for cfname in cutflowNames:
+        cutflows[cfname][1].append( plots.cutflows()[cfname])
 
 ROOT.gROOT.cd()
 ROOT.gStyle.SetOptStat(0)
@@ -193,6 +201,7 @@ if savedir:
     sys.stdout = open(savedir+"summary.log","w")
     print " ".join(sys.argv)
     print " "
+
 for varname in variables:
 
     showCanvas = False if selectedCanvasNames else True
@@ -276,6 +285,51 @@ for varname in variables:
     if options.batch:
         del cnv
 
+allCutFlowsByLabels = { }
+for cfname,cf in cutflows.iteritems():
+    allCutFlowsByLabels[cfname] = [ ]
+    print " "
+    print "Cut flow ",cfname
+    cfByLabels = [ ]
+    line = " ".ljust(15)
+    cfByLabels.append("")
+    for s in samples:
+        line += 2*" " + s.name[:13].rjust(13)
+        cfByLabels.append(s.name)
+    line += 2*" " + "Total"[:13].rjust(13)
+    print line
+    allCutFlowsByLabels[cfname].append(cfByLabels)
+    axis = cf[1][0].GetXaxis()
+    nbins = axis.GetNbins()
+    labels = [ axis.GetBinLabel(i+1) for i in range(nbins) ]
+    cs = len(samples)*[ 0. ]
+    es = len(samples)*[ 0. ]
+    for i,label in enumerate(labels):
+        cfByLabels = [ label ]
+        line1 = label[:15].ljust(15)
+        line2 = " ".ljust(15)
+        csum = 0.
+        esum = 0.
+        for j,s in enumerate(samples):
+            cs[j] = cf[1][j].GetBinContent(i+1)
+            csum += cs[j]
+            es[j] = cf[1][j].GetBinError(i+1)
+            esum += es[j]**2
+            line1 += "{0:15.2f}".format(cs[j])
+            line2 += ("  +- "+"{0:8.2f}".format(es[j]).strip()).rjust(15)
+            cfByLabels.append( ( cs[j], es[j] ) )
+        line1 += "{0:15.2f}".format(csum)
+        line2 += ("  +- "+"{0:8.2f}".format(math.sqrt(esum)).strip()).rjust(15)
+        print line1
+        print line2
+        allCutFlowsByLabels[cfname].append(cfByLabels)
+        if csum<1.e-6:
+            csum = 1.
+        line1 = " ".ljust(15)
+        for j in range(len(cs)):
+            line1 += "{0:7.1f} +-{1:5.1%}".format(100*cs[j]/csum,es[j]/csum)
+        print line1
+
 if oldstdout!=None:
     log = sys.stdout
     sys.stdout = oldstdout
@@ -285,6 +339,7 @@ if sumDict and savedir:
     fsum = open(savedir+"summary.pkl","wb")
     cPickle.dump(args[1:],fsum)
     cPickle.dump(sumDict,fsum)
+    cPickle.dump(allCutFlowsByLabels,fsum)
     fsum.close()
 
 if not options.batch:
