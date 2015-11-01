@@ -34,9 +34,21 @@ def getRcs(histo,name):
         result.GetXaxis().SetBinLabel(i+1,histo.GetXaxis().GetBinLabel(i+1))
     return result
 
-def getRcsRatios(stack0,stack1):
-    h0 = stack0.GetStack().Last()
-    h1 = stack1.GetStack().Last()
+def getByColor(stack,color):
+    result = None
+    for h in stack.GetHists():
+      if h.GetFillColor()==color:
+        assert result==None
+        result = h
+    return result
+  
+def getRcsRatios(stack0,stack1,color=None):
+    if color==None:
+      h0 = stack0.GetStack().Last()
+      h1 = stack1.GetStack().Last()
+    else:
+      h0 = getByColor(stack0,color)
+      h1 = getByColor(stack1,color)
 
     hrcs0 = getRcs(h0,stack0.GetName())
     hrcs0.SetFillStyle(0)
@@ -72,6 +84,8 @@ def getRcsRatios(stack0,stack1):
 
     raw_input("Enter")
 
+    return hrcsRatio
+
 tfs = [ ]
 stacks = [ ]
 for ib in [ 0, 1, 2 ]:
@@ -84,4 +98,14 @@ for ib in [ 0, 1, 2 ]:
 
 print stacks
 ROOT.gROOT.cd()
-h01 = getRcsRatios(stacks[0],stacks[1])
+h01 = getRcsRatios(stacks[0],stacks[1],color=632)
+h12 = getRcsRatios(stacks[1],stacks[2],color=632)
+
+h01.SetLineColor(4)
+h01.SetMarkerColor(4)
+h01.Draw()
+h12.SetLineColor(2)
+h12.SetMarkerColor(2)
+h12.Draw("same")
+ROOT.gPad.Update()
+raw_input("Enter")
