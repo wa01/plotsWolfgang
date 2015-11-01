@@ -43,7 +43,7 @@ else:
 savedir = None
 if options.save:
     savedir = "".join(s for s in options.save if s in string.letters+string.digits+"_-")
-    savedir = "plots_"+savedir+"/"
+    savedir = "/afs/cern.ch/user/a/adamwo/www/cms/ra4/plots_"+savedir+"/"
     if os.path.isdir(savedir):
         if not options.overwrite:
             print "Output directory ",savedir," exists - terminating"
@@ -193,9 +193,9 @@ if savedir!=None:
     if not os.path.isdir(savedir):
         os.mkdir(savedir)
     else:
-        os.system("rm "+savedir+"*.png "+savedir+"*.root "+savedir+"*.pkl "+savedir+"*.log")
-    if os.path.exists(savedir+"../index.php") and os.path.islink(savedir+"../index.php"):
-        target = os.readlink(savedir+"../index.php")
+        os.system("rm "+savedir+"*.png "+savedir+"*.root "+savedir+"*.pkl "+savedir+"*.log "+savedir+"*.php")
+    if os.path.exists(savedir+"../my_index.php") and os.path.islink(savedir+"../my_index.php"):
+        target = os.readlink(savedir+"../my_index.php")
         os.symlink(target,savedir+"index.php")
 
 canvases = [ ]

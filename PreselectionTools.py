@@ -69,7 +69,7 @@ class RA40bSelection:
             self.jet2Pt = eh.get("Jet_pt")[jets[1]]
         else:
             self.jet2Pt = 0.
-        self.nBJets = len(bJets(eh))
+        self.nBJets = eh.get("nBJetMedium30")
         self.ht = eh.get("htJet30j")
                         
     def inBin(self,x,rng):
@@ -100,6 +100,15 @@ class RA40bSelection:
 
         return True
 
+    def matchRegions(self,njets=None,lt=None,ht=None):
+        result = [ ]
+        for r,cuts in RA40bSelection.regions.iteritems():
+            if ( njets==None or self.inBin(njets,cuts[0]) ) and \
+               ( lt==None or self.inBin(lt,cuts[1]) ) and \
+               ( ht==None or self.inBin(ht,cuts[2]) ):
+                result.append(r)
+        return result
+
     def region(self):
         if not self.preselection():
             return None
@@ -107,19 +116,25 @@ class RA40bSelection:
         if self.nBJets>0:
             return None
 
-        result = None
-        for r in RA40bSelection.regions:
-            if self.inBin(self.nJets,RA40bSelection.regions[r][0]) and \
-               self.inBin(self.lt,RA40bSelection.regions[r][1]) and \
-               self.inBin(self.ht,RA40bSelection.regions[r][2]):
-                assert result==None
-                result = r
-
-        if result==None:
+        matched = self.matchRegions(self.nJets,self.lt,self.ht)
+        assert len(matched)<2
+        if len(matched)==0:
             return None
+        result = matched[0]
+
+#        result = None
+#        for r in RA40bSelection.regions:
+#            if self.inBin(self.nJets,RA40bSelection.regions[r][0]) and \
+#               self.inBin(self.lt,RA40bSelection.regions[r][1]) and \
+#               self.inBin(self.ht,RA40bSelection.regions[r][2]):
+#                assert result==None
+#                result = r
+#
+#        if result==None:
+#            return None
 
         dphi = self.wkin.dPhi()
-        if dphi<RA40bSelection.regions[r][3]:
+        if dphi<RA40bSelection.regions[result][3]:
             result = "C" + result
         else:
             result = "S" + result
@@ -134,3 +149,47 @@ class RA40bSelection:
         r = self.region()
         return r!=None and r.startswith("C")
 
+    def wRegions(self):
+        if not self.preselection():
+            return [ ]
+
+        if self.nBJets>0:
+            return [ ]
+
+        if self.nJets<2 or self.nJets>3:
+            return [ ]
+
+        matched = self.matchRegions(None,self.lt,self.ht)
+
+        dphi = self.wkin.dPhi()
+        result = [ ]
+        for r in matched:
+            if dphi<RA40bSelection.regions[r][3]:
+                result.append("C"+r)
+            else:
+                result.append("S"+r)
+
+        return result
+
+    def ttRegions(self,nb):
+
+        if not self.preselection():
+            return [ ]
+
+        if self.nBJets!=nb:
+            return [ ]
+
+        if self.nJets<4 or self.nJets>5:
+            return [ ]
+
+        matched = self.matchRegions(None,self.lt,self.ht)
+
+        dphi = self.wkin.dPhi()
+        result = [ ]
+        for r in matched:
+            if dphi<RA40bSelection.regions[r][3]:
+                result.append("C"+r)
+            else:
+                result.append("S"+r)
+
+        return result
