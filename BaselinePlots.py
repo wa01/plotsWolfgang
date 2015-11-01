@@ -51,7 +51,7 @@ class BaselinePlots(PlotsBase):
             self.addVariable("CSRs"+flv,27,-13.5,13.5,'b')
             self.addVariable("after"+flv,1,0.5,1.5,'b')
 
-        self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet4","jet2Pt80","lt250"])
+        self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet4","jet2Pt80","lt250","nbge1"])
 
 #        self.charges = [ "Minus", "Plus" ]
 #        self.charges = [ "" ]
@@ -204,7 +204,8 @@ class BaselinePlots(PlotsBase):
             return
         self.passedCut("lt250",w)
 
-        self.fill1DByFlavour("nBJet",pdgLep,eh.get("nBJetMedium30"),w)
+        if eh.get("nBJetMedium30")>0:
+            self.passedCut("nbge1",w)
 
         self.selection.set(eh)
         lt2 = self.selection.wkin.lt()
@@ -214,9 +215,15 @@ class BaselinePlots(PlotsBase):
 
         if nGoodJs<5:
             return
+        self.fill1DByFlavour("nBJet",pdgLep,eh.get("nBJetMedium30"),w)
+        assert eh.get("nBJetMedium30")==self.selection.nBJets
+        if eh.get("nBJetMedium30")>0:
+            return
+        assert self.selection.preselection()
         region = self.selection.region()
         if region==None:
             self.fill1DByFlavour("CSRs",pdgLep,0.,w)
+            print "*Rejected: ",eh.get("nBJetMedium30"),self.selection.preselection(),self.selection.__dict__
         else:
             assert region[0]=="C" or region[0]=="S"
             if region[0]=="C":

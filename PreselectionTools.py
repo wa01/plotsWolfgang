@@ -42,10 +42,13 @@ class RA40bSelection:
         self.metPhi = None
         self.wkin = None
         self.lt = None
-        self.goodJets = None
+        self.nJets = None
+        self.nBJets = None
+        self.jet2Pt = None
         self.ht = None
 
     def set(self,eh):
+        self.reset()
         self.tightLeptons = tightLeptons(eh,ptmin=25.)
         if len(self.tightLeptons)>0:
             idx = self.tightLeptons[0]
@@ -60,7 +63,13 @@ class RA40bSelection:
             self.wkin = LepNuSystem(self.met,self.metPhi,self.leptonPt,self.leptonPhi,self.leptonEta,self.leptonPdg)
             self.lt = self.wkin.lt()
 
-        self.goodJets = goodJets(eh)
+        jets = goodJets(eh)
+        self.nJets = len(jets)
+        if self.nJets>1:
+            self.jet2Pt = eh.get("Jet_pt")[jets[1]]
+        else:
+            self.jet2Pt = 0.
+        self.nBJets = len(bJets(eh))
         self.ht = eh.get("htJet30j")
                         
     def inBin(self,x,rng):
@@ -77,7 +86,10 @@ class RA40bSelection:
         if len(self.vetoLeptons)>0:
             return False
 
-        if len(self.goodJets)<4:
+        if self.nJets<4:
+            return False
+
+        if self.jet2Pt<80.:
             return False
 
         if self.ht<500.:
@@ -92,9 +104,12 @@ class RA40bSelection:
         if not self.preselection():
             return None
 
+        if self.nBJets>0:
+            return None
+
         result = None
         for r in RA40bSelection.regions:
-            if self.inBin(len(self.goodJets),RA40bSelection.regions[r][0]) and \
+            if self.inBin(self.nJets,RA40bSelection.regions[r][0]) and \
                self.inBin(self.lt,RA40bSelection.regions[r][1]) and \
                self.inBin(self.ht,RA40bSelection.regions[r][2]):
                 assert result==None
@@ -110,4 +125,12 @@ class RA40bSelection:
             result = "S" + result
 
         return result
+
+    def isSignalRegion(self):
+        r = self.region()
+        return r!=None and r.startswith("S")
+
+    def isControlRegion(self):
+        r = self.region()
+        return r!=None and r.startswith("C")
 

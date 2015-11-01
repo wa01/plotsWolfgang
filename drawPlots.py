@@ -133,11 +133,15 @@ else:
                                         "DYJetsToLL_M50_HT400to600", \
                                         "DYJetsToLL_M50_HT600toInf" ], \
                               baseweights=[lumi, lumi, lumi, lumi] ))
+    samples.append(Sample("TTV",sampleBase,type="B",color=6,fill=True, \
+                              kfactor=1., \
+                              namelist=["TTWJetsToQQ_25ns","TTZToLLNuNu_25ns","TTZToQQ_25ns"], \
+                              baseweights=3*[lumi] ))
     samples.append(Sample("singleTop",sampleBase,type="B",color=ROOT.kRed-7,fill=True,kfactor=1., \
                               namelist=["TToLeptons_sch", \
-                                        "TToLeptons_tch", \
-                                        "T_tWch", \
-                                        "TBar_tWch" ], \
+                                            "TToLeptons_tch", \
+                                            "T_tWch", \
+                                            "TBar_tWch" ], \
                               baseweights=lumi ))
     samples.append(Sample("TTJets_LO_25ns",sampleBase,type="B",color=ROOT.kRed,fill=True, \
                               kfactor=1.,baseweights=lumi ))
@@ -190,7 +194,10 @@ if savedir!=None:
         os.mkdir(savedir)
     else:
         os.system("rm "+savedir+"*.png "+savedir+"*.root "+savedir+"*.pkl "+savedir+"*.log")
-    
+    if os.path.exists(savedir+"../index.php") and os.path.islink(savedir+"../index.php"):
+        target = os.readlink(savedir+"../index.php")
+        os.symlink(target,savedir+"index.php")
+
 canvases = [ ]
 pads = [ ]
 allobjects = [ ]

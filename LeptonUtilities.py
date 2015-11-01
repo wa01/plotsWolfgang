@@ -235,3 +235,9 @@ def isGoodJet(eh,idx):
 
 def goodJets(eh):
   return [ i for i in range(len(eh.get("Jet_pt"))) if isGoodJet(eh,i) ]
+
+def isBJet(eh,idx):
+  return isGoodJet(eh,idx) and eh.get("Jet_btagCSV")[idx]>0.89
+
+def bJets(eh):
+  return [ i for i in range(len(eh.get("Jet_pt"))) if isBJet(eh,i) ]

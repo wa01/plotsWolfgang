@@ -16,7 +16,7 @@ class CutFlow:
     self.histogram = None
 
   def createHistogram(self):
-    h = ROOT.TH1D(self.name,self.name,len(self.labels),-0.5,len(self.labels)-1)
+    h = ROOT.TH1D(self.name,self.name,len(self.labels),-0.5,len(self.labels)-0.5)
     axis = h.GetXaxis()
     for i,l in enumerate(self.labels):
       axis.SetBinLabel(i+1,l)
