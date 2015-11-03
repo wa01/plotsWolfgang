@@ -33,7 +33,7 @@ class BaselinePlots(PlotsBase):
         assert len(args)==0
 
         if self.options.splitChannels:
-            self.flavours = [ "Ele", "Mu" ]
+            self.flavours = [ "", "Ele", "Mu" ]
         else:
             self.flavours = [ "" ]
         for flv in self.flavours:
@@ -66,95 +66,15 @@ class BaselinePlots(PlotsBase):
             self.addVariable("CSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("after"+flv,1,0.5,1.5,'b')
 
-        self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet4","jet2Pt80","lt250","nb0","nbge1"])
-        csrNames = [ ]
-        for i in range(13):
-            csrNames.append("CR"+str(i+1))
-            csrNames.append("SR"+str(i+1))
-        self.addCutFlow(csrNames,nameFlow="CSRflow")
+            self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet4","jet2Pt80", \
+                                 "lt250","nb0","nbge1"],"DefaultCutFlow"+flv)
+            csrNames = [ ]
+            for i in range(13):
+                csrNames.append("CR"+str(i+1))
+            for i in range(13):
+                csrNames.append("SR"+str(i+1))
+            self.addCutFlow(csrNames,nameFlow="CSRflow"+flv)
 
-#        self.charges = [ "Minus", "Plus" ]
-#        self.charges = [ "" ]
-#        for sign in self.charges:
-#            self.addVariable("isrJetPt"+sign,100,0.,1000.,'l')
-#            self.addVariable("isrJetEta"+sign,50,0.,5.,'u')
-#            self.addVariable("jet1Pt"+sign,100,0.,1000.,'u')
-#            self.addVariable("jet1Eta"+sign,50,0.,5.,'u')
-#            self.addVariable("jet1BTag"+sign,100,-1.,1.,'u')
-#            self.addVariable("jet2Pt"+sign,100,0.,1000.,'u')
-#            self.addVariable("jet2Eta"+sign,50,0.,5.,'u')
-#            self.addVariable("jet2BTag"+sign,100,-1.,1.,'u')
-#            self.addVariable("jetPtRatio"+sign,50,0.,1.,'u')
-#            self.addVariable("njet60"+sign,10,-0.5,9.5,'u')
-#            self.addVariable("njet"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbMedium"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbMedium60"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbLoose"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbLoose60"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nmu"+sign,10,-0.5,9.5,'u')
-#            self.addVariable("met"+sign,100,0.,1000.,'l')
-#            self.addVariable("metParZ"+sign,100,-100.,100.,'b')
-#            self.addVariable("metPerpZ"+sign,100,-100.,100.,'b')
-#            self.addVariable("metParJet"+sign,100,-100.,100.,'b')
-#            self.addVariable("metPerpJet"+sign,100,-100.,100.,'b')
-#            self.addVariable("ht"+sign,100,0.,1000.,'l')
-#            self.addVariable("zm"+sign,100,0.,500.,'b')
-#            self.addVariable("zpt"+sign,200,0.,1000.,'b')
-#            self.addVariable("zptmod"+sign,200,0.,1000.,'b')
-#            self.addVariable("zeta"+sign,50,0.,5.,'b')
-#            self.addVariable("zptmodht"+sign,24,0.,1000.,'b',
-#                             binEdges=range(0,100,10)+range(100,300,25)+range(300,450,50)+[450,550,650,1000])
-#            self.addVariable("mt"+sign,50,0.,200.,'u')
-#            self.addVariable("qq"+sign,3,-1.,1.,'b')
-#            for i in range(2):
-#                self.addVariable("hard"+self.leptonPrefixCap+str(i)+"Pt"+sign,100,0.,500.,'b')
-#                self.addVariable("hard"+self.leptonPrefixCap+str(i)+"Eta"+sign,60,0.,3.,'b')
-#                self.addVariable("hard"+self.leptonPrefixCap+str(i)+"RelIso"+sign,100,0.,0.25,'b')
-#                self.addVariable("hard"+self.leptonPrefixCap+str(i)+"Log10Dxy"+sign,150,-4.,-1.,'b')
-#                self.addVariable("hard"+self.leptonPrefixCap+str(i)+"Log10Dz"+sign,100,-4.,0.,'b')
-##                self.addVariable("hard"+self.leptonPrefixCap+str(i)+"Idx"+sign,10,0.,10.,'b')
-#            self.addVariable("softMuPt"+sign,20,0.,50.,'u')
-#            self.addVariable("softMuEta"+sign,60,0.,3.,'u')
-#            self.addVariable("softMuRelIso"+sign,100,0.,10.,'u')
-#            self.addVariable("softMuIso"+sign,100,0.,250.,'u')
-#            self.addVariable("softMuLog10Dxy"+sign,150,-4.,-1.,'u')
-#            self.addVariable("softMuLog10Dz"+sign,100,-4.,0.,'u')
-#            self.addVariable("softMuQ"+sign,2,-20.,20.,'u')
-#            self.addVariable("softMuDRjet"+sign,100,0.,10.,'u')
-#            self.addVariable("softMuDRjetPt"+sign,100,0.,1000.,'u')
-#            self.addVariable("softMuDRjetBTag"+sign,50,-1.,1.,'u')
-#            self.addVariable("zmSoftMu"+sign,100,0.,500.,'b')
-#            self.addVariable("zptSoftMu"+sign,200,0.,1000.,'b')
-#            self.addVariable("zptmodSoftMu"+sign,200,0.,1000.,'b')
-#            self.addVariable("zetaSoftMu"+sign,50,0.,5.,'b')
-#            self.addVariable("zptmodhtSoftMu"+sign,24,0.,1000.,'b',
-#                             binEdges=range(0,100,10)+range(100,300,25)+range(300,450,50)+[450,550,650,1000])
-#            self.addVariable("isrJetPtSoftMu"+sign,100,0.,1000.,'l')
-#            self.addVariable("jet1PtSoftMu"+sign,100,0.,1000.,'u')
-#            self.addVariable("jet1EtaSoftMu"+sign,50,0.,5.,'u')
-#            self.addVariable("jet1BTagSoftMu"+sign,100,-1.,1.,'u')
-#            self.addVariable("njet60SoftMu"+sign,10,-0.5,9.5,'u')
-#            self.addVariable("njetSoftMu"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbMediumSoftMu"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbMedium60SoftMu"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbLooseSoftMu"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nbLoose60SoftMu"+sign,20,-0.5,19.5,'u')
-#            self.addVariable("nmuSoftMu"+sign,10,-0.5,9.5,'u')
-#            self.addVariable("metSoftMu"+sign,100,0.,1000.,'l')
-
-
-#            self.addVariablePair("zptmod",50,0.,1000.,"ht",50,0.,1000.,suffix=sign)
-#            self.addVariablePair("zptmodht",50,0.,1000.,"softMuIso",50,0.,250.,suffix=sign)
-
-#            self.addVariablePair("isrJetPt",50,0.,1000.,"thirdMuon",2,-0.5,1.5,suffix=sign)
-#            self.addVariablePair("njet60",10,-0.5,9.5,"thirdMuon",2,-0.5,1.5,suffix=sign)
-#            self.addVariablePair("njet",20,-0.5,19.5,"thirdMuon",2,-0.5,1.5,suffix=sign)
-#            self.addVariablePair("zptmod",50,0.,1000.,"thirdMuon",2,-0.5,1.5,suffix=sign)
-#            self.addVariablePair("zptmodht",50,0.,1000.,"thirdMuon",2,-0.5,1.5,suffix=sign)
-
-#            self.addVariablePair("softMuIso",50,0.,100.,"softMuPt",15,5.,20.,suffix=sign)
-
-#        self.addVariable("softDiMuM",150,0.,150.,'b')
         curdir.cd()
 
         self.selection = RA40bSelection()
@@ -177,24 +97,23 @@ class BaselinePlots(PlotsBase):
         else:
             pdgLep = 0
         self.fill1DByFlavour("before",pdgLep,1,w)
-        self.passedCut("all",w)
-
+        self.passedCutByFlavour("all",pdgLep,w)
 
         ht = eh.get("htJet30j")
         self.fill1DByFlavour("ht",pdgLep,ht,w)
         if ht<500:
             return
-        self.passedCut("ht500",w)
+        self.passedCutByFlavour("ht500",pdgLep,w)
 
         tightLeps = tightLeptons(eh)
         nTightLep = len(tightLeps)
         self.fill1DByFlavour("nTightLep",pdgLep,nTightLep,w)
         if nTightLep!=1:
             return
-        self.passedCut("oneTightLep",w)
+        self.passedCutByFlavour("oneTightLep",pdgLep,w)
 
         # now lepton flavour is defined
-        if len(self.flavours)==2:
+        if len(self.flavours)>=2:
             pdgLep = eh.get("LepGood_pdgId")[tightLeps[0]]
 
         vetoLeps = vetoLeptons(eh)
@@ -202,40 +121,40 @@ class BaselinePlots(PlotsBase):
         self.fill1DByFlavour("nVetoLep",pdgLep,nVetoLep,w)
         if nVetoLep>0:
             return
-        self.passedCut("noVetoLep",w)
+        self.passedCutByFlavour("noVetoLep",pdgLep,w)
 
         goodJs = goodJets(eh)
         nGoodJs = len(goodJs)
         self.fill1DByFlavour("nJet30",pdgLep,nGoodJs,w)
         if nGoodJs<4:
             return
-        self.passedCut("njet4",w)
+        self.passedCutByFlavour("njet4",pdgLep,w)
 
         self.fill1DByFlavour("ptJet1",pdgLep,eh.get("Jet_pt")[goodJs[0]],w)
         self.fill1DByFlavour("ptJet2",pdgLep,eh.get("Jet_pt")[goodJs[1]],w)
         if eh.get("Jet_pt")[goodJs[1]]<80.:
             return
-        self.passedCut("jet2Pt80",w)
+        self.passedCutByFlavour("jet2Pt80",pdgLep,w)
 
         lt = eh.get("met_pt") + eh.get("LepGood_pt")[tightLeps[0]]
         self.fill1DByFlavour("lt",pdgLep,lt,w)
         if lt<250:
             return
-        self.passedCut("lt250",w)
+        self.passedCutByFlavour("lt250",pdgLep,w)
 
         if eh.get("nBJetMedium30")==0:
-            self.passedCut("nb0",w)
+            self.passedCutByFlavour("nb0",pdgLep,w)
         else:
-            self.passedCut("nbge1",w)
+            self.passedCutByFlavour("nbge1",pdgLep,w)
 
         self.selection.set(eh)
         lt2 = self.selection.wkin.lt()
         assert abs(lt2-lt)/lt<0.00001
-        dphi = self.selection.wkin.dPhi()
+        dphi = abs(self.selection.wkin.dPhi())
         self.fill1DByFlavour("dPhi",pdgLep,abs(dphi),w)
 
-#        if nGoodJs<5:
-#            return
+        if nGoodJs<5:
+            return
 
         self.fill1DByFlavour("nBJet",pdgLep,eh.get("nBJetMedium30"),w)
         self.fill1DByFlavour("ptLep",pdgLep,eh.get("LepGood_pt")[tightLeps[0]],w)
@@ -293,7 +212,7 @@ class BaselinePlots(PlotsBase):
                 self.fill1DByFlavour("CSRs",pdgLep,-int(region[2:]),w)
             else:
                 self.fill1DByFlavour("CSRs",pdgLep,int(region[2:]),w)
-            self.passedCut(region,w,nameFlow="CSRflow")
+            self.passedCutByFlavour(region,pdgLep,w,nameFlow="CSRflow")
             
         self.fill1DByFlavour("after",pdgLep,1,w)
 

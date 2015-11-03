@@ -8,8 +8,11 @@ class Sample:
         self.name = name
         if namelist==None or namelist==[ ]:
             self.names = [ name ]
-            nproc = self.getCmgInputStat(base,name)
-            self.baseweights = [ float(baseweights)/nproc ]
+            if not type.lower()=="d":
+                nproc = self.getCmgInputStat(base,name)
+                self.baseweights = [ float(baseweights)/nproc ]
+            else:
+                self.baseweights = [ 1. ]
         else:
             self.names = namelist
             self.baseweights = [ ]
@@ -17,11 +20,14 @@ class Sample:
             if bwList:
                 assert len(namelist)==len(baseweights)
             for i,n in enumerate(namelist):
-                nproc = self.getCmgInputStat(base,namelist[i])
-                if bwList:
-                    self.baseweights.append(float(baseweights[i])/nproc)
+                if not type.lower()=="d":
+                    nproc = self.getCmgInputStat(base,namelist[i])
+                    if bwList:
+                        self.baseweights.append(float(baseweights[i])/nproc)
+                    else:
+                        self.baseweights.append(float(baseweights)/nproc)
                 else:
-                    self.baseweights.append(float(baseweights)/nproc)
+                    self.baseweights.append(1.)
         self.title = title if title!=None else name
         self.base = base
         self.type = type

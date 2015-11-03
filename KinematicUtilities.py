@@ -1,5 +1,5 @@
 import ROOT
-from math import sqrt,pi,cos,sin
+from math import sqrt,pi,cos,sin,acos
 
 def deltaPhi(phi1,phi2):
     result = phi2 - phi1
@@ -61,9 +61,17 @@ class LepNuSystem:
         self.met = ROOT.TLorentzVector()
         self.met.SetPtEtaPhiM(metPt,0.,metPhi,0.)
         self.lepton = ROOT.TLorentzVector()
+#        self.lepton.SetPtEtaPhiM(lepPt,0.,lepPhi,0.)
         self.lepton.SetPtEtaPhiM(lepPt,lepEta,lepPhi,0.)
         self.lepPdg = lepPdg
         self.w = self.met + self.lepton
+#        dphiRS = acos((lepPt+metPt*cos(lepPhi-metPhi))/ \
+#                          sqrt((lepPt**2)+(metPt**2)+(2*metPt*lepPt*cos(lepPhi-metPhi))))
+#        dphiWA = deltaPhi(self.lepton.Phi(),self.w.Phi())
+#        if abs(abs(dphiRS)-abs(dphiWA))>1.e-4:
+#            print "**** dphi error *****"
+#            print "test dphi:",metPt,metPhi,lepPt,lepPhi,self.w.Pt(),self.w.Phi()
+#            print dphiRS,dphiWA
 
     def pt(self):
         return w.Pt()
@@ -79,4 +87,4 @@ class LepNuSystem:
         return w.Phi()
 
     def dPhi(self):
-        return self.lepton.Phi() - self.w.Phi()
+        return deltaPhi(self.lepton.Phi(),self.w.Phi())

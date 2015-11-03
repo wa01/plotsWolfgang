@@ -133,7 +133,7 @@ class RA40bSelection:
 #        if result==None:
 #            return None
 
-        dphi = self.wkin.dPhi()
+        dphi = abs(self.wkin.dPhi())
         if dphi<RA40bSelection.regions[result][3]:
             result = "C" + result
         else:
@@ -161,7 +161,7 @@ class RA40bSelection:
 
         matched = self.matchRegions(None,self.lt,self.ht)
 
-        dphi = self.wkin.dPhi()
+        dphi = abs(self.wkin.dPhi())
         result = [ ]
         for r in matched:
             if dphi<RA40bSelection.regions[r][3]:
@@ -184,7 +184,7 @@ class RA40bSelection:
 
         matched = self.matchRegions(None,self.lt,self.ht)
 
-        dphi = self.wkin.dPhi()
+        dphi = abs(self.wkin.dPhi())
         result = [ ]
         for r in matched:
             if dphi<RA40bSelection.regions[r][3]:

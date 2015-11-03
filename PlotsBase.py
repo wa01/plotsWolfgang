@@ -235,9 +235,8 @@ class PlotsBase:
         self.histogramList[fullname].Fill(value,weight)
 
     def fill1DByFlavour(self,name,pdg,value,weight):
-        if pdg==None:
-            self.histogramList[name].Fill(value,weight)
-        else:
+        self.histogramList[name].Fill(value,weight)
+        if pdg!=None:
             if pdg==0 or abs(pdg)==11:
                 self.histogramList[name+"Ele"].Fill(value,weight)        
             if pdg==0 or abs(pdg)==13:
@@ -260,3 +259,14 @@ class PlotsBase:
     def passedCut(self,label,w,nameFlow="DefaultCutFlow"):
         flow = PlotsBase.cutflows[nameFlow]
         self.cutflowList[nameFlow].Fill(flow.index(label),w)
+
+    def passedCutByFlavour(self,label,pdg,w,nameFlow="DefaultCutFlow"):
+        flow = PlotsBase.cutflows[nameFlow]
+        self.cutflowList[nameFlow].Fill(flow.index(label),w)
+        if pdg!=None:
+            if pdg==0 or abs(pdg)==11:
+                flow = PlotsBase.cutflows[nameFlow+"Ele"]
+                self.cutflowList[nameFlow+"Ele"].Fill(flow.index(label),w)
+            if pdg==0 or abs(pdg)==13:
+                flow = PlotsBase.cutflows[nameFlow+"Mu"]
+                self.cutflowList[nameFlow+"Mu"].Fill(flow.index(label),w)
