@@ -28,7 +28,16 @@ class RA40bSelection:
         'R13' : ( [ 8, None ], [ 450, None ], [ 500, None ], 0.75 ) }
     regionLabels = sorted(regions.keys(),key = lambda x: int(x[1:]))
 
-    def __init__(self):
+    def __init__(self,reqNTightLep=1,reqTightLepPt=25.,reqNVetoLep=0,reqVetoLepPt=10., \
+                     reqHT=500.,reqLT=250.,reqNjet=4,reqJet2Pt=80.):
+        self.reqNTightLep = reqNTightLep
+        self.reqTightLepPt = reqTightLepPt
+        self.reqNVetoLep = reqNVetoLep
+        self.reqVetoLepPt = reqVetoLepPt
+        self.reqHT = reqHT
+        self.reqLT = reqLT
+        self.reqNjet = reqNjet
+        self.reqJet2Pt = reqJet2Pt
         self.reset()
 
     def reset(self):
@@ -49,14 +58,14 @@ class RA40bSelection:
 
     def set(self,eh):
         self.reset()
-        self.tightLeptons = tightLeptons(eh,ptmin=25.)
+        self.tightLeptons = tightLeptons(eh,ptmin=self.reqTightLepPt)
         if len(self.tightLeptons)>0:
             idx = self.tightLeptons[0]
             self.leptonPt = eh.get("LepGood_pt")[idx]
             self.leptonPhi = eh.get("LepGood_phi")[idx]
             self.leptonEta = eh.get("LepGood_eta")[idx]
             self.leptonPdg = eh.get("LepGood_pdgId")[idx]
-        self.vetoLeptons = vetoLeptons(eh,ptmin=10.,pttight=25.)
+        self.vetoLeptons = vetoLeptons(eh,ptmin=self.reqVetoLepPt,pttight=self.reqTightLepPt)
         self.met = eh.get("met_pt")
         self.metPhi = eh.get("met_phi")
         if self.leptonPt!=None:
@@ -80,22 +89,22 @@ class RA40bSelection:
         return True
         
     def preselection(self):
-        if len(self.tightLeptons)!=1:
+        if len(self.tightLeptons)!=self.reqNTightLep:
             return False
 
-        if len(self.vetoLeptons)>0:
+        if len(self.vetoLeptons)>self.reqNVetoLep:
             return False
 
-        if self.nJets<4:
+        if self.nJets<self.reqNjet:
             return False
 
-        if self.jet2Pt<80.:
+        if self.jet2Pt<self.reqJet2Pt:
             return False
 
-        if self.ht<500.:
+        if self.ht<self.reqHT:
             return False
 
-        if self.lt<250:
+        if self.lt<self.reqLT:
             return False
 
         return True
