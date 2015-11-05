@@ -90,6 +90,8 @@ class BaselinePlots(PlotsBase):
 #            if self.reweightDY:
 #                w *= self.reweightClass.isrWeightDY(zpt)
             w = eh.get("xsec")*sample.baseweights[itree]*sample.downscale*sample.extweight
+#            if sample.mcReweight:
+#                w *= sample.mcReweight.weight(eh)
         else:
             w = 1
         self.timers[0].stop()        

@@ -239,3 +239,4 @@ class RA40bSelection:
             return True
 
         return False
+

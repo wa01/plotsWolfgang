@@ -1,10 +1,11 @@
 import ROOT
 import os
+from MCReweight import *
 
 class Sample:
 
     def __init__(self,name,base,namelist=None,title=None,type="B",color=1,fill=False,line=1,hatch=None, \
-                     downscale=1,filter=None,extension=False,kfactor=1.,baseweights=1.):
+                     downscale=1,filter=None,extension=False,kfactor=1.,baseweights=1.,mcReweight=None):
         self.name = name
         if namelist==None or namelist==[ ]:
             self.names = [ name ]
@@ -42,7 +43,11 @@ class Sample:
         self.extweight = kfactor
         if extension:
             self.extweight /= len(namelist)
-        print "Created sample",name,"with",self.names
+        if mcReweight==None:
+            self.mcReweight = None
+        else:
+            self.mcReweight = EventReweighting(mcReweight[0],mcReweight[1])
+#        print "Created sample",name,"with",self.names
 
     def getCmgInputStat(self,base,name):
         nproc = None

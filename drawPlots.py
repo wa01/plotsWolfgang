@@ -119,6 +119,11 @@ else:
 #    samples.append(Sample("T2DegStop_300_270",sampleBase,type="S",color=1,line=2,fill=False))
 #    samples.append(Sample("T2DegStop_300_240",sampleBase,type="S",color=1,line=4,fill=False))
 
+    currDir = ROOT.gDirectory
+    tfPU = ROOT.TFile("puWeights.root")
+    ROOT.gROOT.cd()
+    hPU = tfPU.Get("puWeightsByNvert").Clone()
+    currDir.cd()
     samples.append(Sample("QCD",sampleBase,type="B",color=8,fill=True,kfactor=1., \
                               namelist=["QCD_HT200to300", \
                                             "QCD_HT300to500", \
@@ -127,26 +132,26 @@ else:
                                             "QCD_HT1000to1500", \
                                             "QCD_HT1500to2000", \
                                             "QCD_HT2000toInf" ], \
-                              baseweights=lumi ))
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
     samples.append(Sample("DYJetsToLL",sampleBase,type="B",color=5,fill=True, \
                               kfactor=1., \
                               namelist=["DYJetsToLL_M50_HT100to200", \
                                         "DYJetsToLL_M50_HT200to400", \
                                         "DYJetsToLL_M50_HT400to600", \
                                         "DYJetsToLL_M50_HT600toInf" ], \
-                              baseweights=[lumi, lumi, lumi, lumi] ))
+                              baseweights=[lumi, lumi, lumi, lumi],mcReweight=("nVert",hPU) ))
     samples.append(Sample("TTV",sampleBase,type="B",color=6,fill=True, \
                               kfactor=1., \
                               namelist=["TTWJetsToQQ_25ns","TTZToLLNuNu_25ns","TTZToQQ_25ns"], \
-                              baseweights=3*[lumi] ))
+                              baseweights=3*[lumi],mcReweight=("nVert",hPU) ))
     samples.append(Sample("singleTop",sampleBase,type="B",color=ROOT.kRed-7,fill=True,kfactor=1., \
                               namelist=["TToLeptons_sch", \
                                             "TToLeptons_tch", \
                                             "T_tWch", \
                                             "TBar_tWch" ], \
-                              baseweights=lumi ))
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
     samples.append(Sample("TTJets_LO_25ns",sampleBase,type="B",color=ROOT.kRed,fill=True, \
-                              kfactor=1.,baseweights=lumi ))
+                              kfactor=1.,baseweights=lumi,mcReweight=("nVert",hPU) ))
     samples.append(Sample("WJetsToLNu",sampleBase,type="B",color=4,fill=True, \
                               kfactor=1., \
                               namelist=["WJetsToLNu_HT100to200", \
@@ -156,7 +161,7 @@ else:
                                         "WJetsToLNu_HT800to1200", \
                                         "WJetsToLNu_HT1200to2500", \
                                         "WJetsToLNu_HT2500toInf" ], \
-                              baseweights=7*[lumi] ))
+                              baseweights=7*[lumi],mcReweight=("nVert",hPU) ))
     if options.data:
 #        samples.append(Sample("SingleMuon_Run2015D",sampleBase,type="D",color=1,fill=False))
         samples.append(Sample("SingleMuon_Run2015D_1p2fb",sampleBase,type="D",color=1,fill=False,
