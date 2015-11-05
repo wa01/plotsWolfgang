@@ -93,7 +93,8 @@ if not os.path.isdir(elistbase):
 
 samples = []
 lumi = 3000.
-lumi = 133
+lumi = 1250.
+#lumi = 133
 if options.dset=="singleMu":
     pass
 else:
@@ -157,7 +158,9 @@ else:
                                         "WJetsToLNu_HT2500toInf" ], \
                               baseweights=7*[lumi] ))
     if options.data:
-        samples.append(Sample("SingleMuon_Run2015D",sampleBase,type="D",color=1,fill=False))
+#        samples.append(Sample("SingleMuon_Run2015D",sampleBase,type="D",color=1,fill=False))
+        samples.append(Sample("SingleMuon_Run2015D_1p2fb",sampleBase,type="D",color=1,fill=False,
+                              namelist=[ "SingleMuon_Run2015D_v4", "SingleMuon_Run2015D_05Oct"] ))
 
 
 ROOT.TH1.SetDefaultSumw2()

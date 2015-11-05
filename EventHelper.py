@@ -43,6 +43,8 @@ class EventHelper:
             return 'f'
         if type=="Int_t":
             return 'i'
+        if type=="UInt_t":
+            return 'I'
         if type=="ULong64_t":
             return 'L'
         raise Exception("Unknown / unsupported ROOT data type ",type)

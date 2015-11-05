@@ -21,6 +21,7 @@ class BaselinePlots(PlotsBase):
 
         parser = OptionParser()
         parser.add_option("--splitChannels", dest="splitChannels", action="store_true", default=False)
+        parser.add_option("--channel", dest="channel", choices=[ "Ele", "Mu" ], default=None )
 #        parser.add_option("--channel", dest="channel",  help="channel", choices=[ "mu", "el" ], default="mu")
 #        parser.add_option("--metht", dest="metht",  help="MET/HT cut", type=float, default=150.)
 #        parser.add_option("--isrPt", dest="isrPt",  help="isrJetPt cut", type=float, default=None)
@@ -58,6 +59,7 @@ class BaselinePlots(PlotsBase):
             self.addVariable("metPhi"+flv,90,-math.pi,math.pi,'b')
             self.addVariable("dPhiMetJet1"+flv,63,0.,3.15,'l')
             self.addVariable("dPhiMetJet2"+flv,63,0.,3.15,'l')
+            self.addVariable("nVert"+flv,50,-0.5,49.5,'b')
             nr = len(RA40bSelection.regions.keys())
             self.addVariable("wCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("tt0bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
@@ -83,7 +85,7 @@ class BaselinePlots(PlotsBase):
 
 
         self.timers[0].start()
-        if self.name!="data":
+        if not sample.isData():
 #            w = eh.get("weight")*sample.downscale*sample.extweight
 #            if self.reweightDY:
 #                w *= self.reweightClass.isrWeightDY(zpt)
@@ -113,8 +115,13 @@ class BaselinePlots(PlotsBase):
         self.passedCutByFlavour("oneTightLep",pdgLep,w)
 
         # now lepton flavour is defined
-        if len(self.flavours)>=2:
+        if len(self.flavours)>=2 or self.options.channel!=None:
             pdgLep = eh.get("LepGood_pdgId")[tightLeps[0]]
+            if ( self.options.channel=="Ele" and abs(pdgLep)!=11 ) or \
+               ( self.options.channel=="Mu" and abs(pdgLep)!=13 ):
+                return
+        if len(self.flavours)==1:
+            pdgLep = None
 
         vetoLeps = vetoLeptons(eh)
         nVetoLep = len(vetoLeps)
@@ -130,6 +137,7 @@ class BaselinePlots(PlotsBase):
             return
         self.passedCutByFlavour("njet4",pdgLep,w)
 
+        self.fill1DByFlavour("nVert",pdgLep,eh.get("nVert"),w)
         self.fill1DByFlavour("ptJet1",pdgLep,eh.get("Jet_pt")[goodJs[0]],w)
         self.fill1DByFlavour("ptJet2",pdgLep,eh.get("Jet_pt")[goodJs[1]],w)
         if eh.get("Jet_pt")[goodJs[1]]<80.:

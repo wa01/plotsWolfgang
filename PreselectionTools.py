@@ -55,9 +55,13 @@ class RA40bSelection:
         self.nBJets = None
         self.jet2Pt = None
         self.ht = None
+        self.triggers = [ None, None ]
+        self.filters = True
+        self.region_ = ""
 
-    def set(self,eh):
+    def set(self,eh,isData=False):
         self.reset()
+        self.isData = isData
         self.tightLeptons = tightLeptons(eh,ptmin=self.reqTightLepPt)
         if len(self.tightLeptons)>0:
             idx = self.tightLeptons[0]
@@ -69,7 +73,8 @@ class RA40bSelection:
         self.met = eh.get("met_pt")
         self.metPhi = eh.get("met_phi")
         if self.leptonPt!=None:
-            self.wkin = LepNuSystem(self.met,self.metPhi,self.leptonPt,self.leptonPhi,self.leptonEta,self.leptonPdg)
+            self.wkin = LepNuSystem(self.met,self.metPhi, \
+                                    self.leptonPt,self.leptonPhi,self.leptonEta,self.leptonPdg)
             self.lt = self.wkin.lt()
 
         jets = goodJets(eh)
@@ -80,6 +85,14 @@ class RA40bSelection:
             self.jet2Pt = 0.
         self.nBJets = eh.get("nBJetMedium30")
         self.ht = eh.get("htJet30j")
+        if self.isData:
+            self.triggers = [ eh.get("HLT_EleHT350")>0.5, eh.get("HLT_MuHT350")>0.5 ]
+            self.filters = eh.get("nVert")>0 and eh.get("Flag_CSCTightHaloFilter")>0.5 and \
+                eh.get("Flag_eeBadScFilter")>0.5 and eh.get("Flag_HBHENoiseFilter_fix")>0.5 and \
+                eh.get("Flag_HBHENoiseIsoFilter")>0.5
+#            if not self.filters:
+#                print "*** Rejected"
+
                         
     def inBin(self,x,rng):
         if rng[0]!=None and x<rng[0]:
@@ -91,6 +104,14 @@ class RA40bSelection:
     def preselection(self):
         if len(self.tightLeptons)!=self.reqNTightLep:
             return False
+
+        if not self.filters:
+            return False
+
+        if self.isData:
+            if ( abs(self.leptonPdg)==11 and not self.triggers[0] ) or \
+               ( abs(self.leptonPdg)==13 and not self.triggers[1] ):
+                return False
 
         if len(self.vetoLeptons)>self.reqNVetoLep:
             return False
@@ -119,6 +140,10 @@ class RA40bSelection:
         return result
 
     def region(self):
+        if self.region_!="":
+            return self.region_
+        self.region_ = None
+
         if not self.preselection():
             return None
 
@@ -148,6 +173,7 @@ class RA40bSelection:
         else:
             result = "S" + result
 
+        self.region_ = result
         return result
 
     def isSignalRegion(self):
@@ -202,3 +228,14 @@ class RA40bSelection:
                 result.append("S"+r)
 
         return result
+
+    def isBlinded(self):
+        if not self.preselection():
+            return False
+
+        if self.nBJets==0 and abs(self.wkin.dPhi())>0.5:
+            return True
+        if self.nBJets>0 and self.nJets>5:
+            return True
+
+        return False
