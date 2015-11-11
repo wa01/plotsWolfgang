@@ -67,6 +67,25 @@ class BaselinePlots(PlotsBase):
             self.addVariable("tt2bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("CSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("after"+flv,1,0.5,1.5,'b')
+            for i in range(nr):
+#                rname = 'R{0:02d}'.format(i+1)
+                dPhiMin = RA40bSelection.regions["R"+str(i+1)][-1]
+                dPhiEdges = [ 0. ]
+                ddPhi = 0.125
+                while (dPhiEdges[-1]+ddPhi-dPhiMin)<0.001:
+                    dPhiEdges.append(dPhiEdges[-1]+ddPhi)
+                ddPhi = 0.25
+                while (dPhiEdges[-1]+ddPhi-1.)<0.001:
+                    dPhiEdges.append(dPhiEdges[-1]+ddPhi)
+                ddPhi = 0.70
+                while (dPhiEdges[-1]+ddPhi-3.15)<0.001:
+                    dPhiEdges.append(dPhiEdges[-1]+ddPhi)
+#                print dPhiEdges
+#                dPhiEdges = [ j/10. for j in range(10) ]
+#                dPhiEdges.extend([ 1.35, 1.80, 2.25, 2.70, 3.15 ])
+                self.addVariable("dPhiR"+"{0:02d}".format(i+1)+flv,len(dPhiEdges)-1, \
+                                     dPhiEdges[0],dPhiEdges[-1],'l', \
+                                     binEdges=dPhiEdges)
 
             self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet4","jet2Pt80", \
                                  "lt250","nb0","nbge1"],"DefaultCutFlow"+flv)
@@ -218,10 +237,12 @@ class BaselinePlots(PlotsBase):
 #            print "*Rejected: ",eh.get("nBJetMedium30"),self.selection.preselection(),self.selection.__dict__
         if region!=None:
             assert region[0]=="C" or region[0]=="S"
+            ir = int(region[2:])
             if region[0]=="C":
-                self.fill1DByFlavour("CSRs",pdgLep,-int(region[2:]),w)
+                self.fill1DByFlavour("CSRs",pdgLep,-ir,w)
             else:
-                self.fill1DByFlavour("CSRs",pdgLep,int(region[2:]),w)
+                self.fill1DByFlavour("CSRs",pdgLep,ir,w)
+            self.fill1DByFlavour("dPhiR"+"{0:02d}".format(ir),pdgLep,abs(dphi),w)
             self.passedCutByFlavour(region,pdgLep,w,nameFlow="CSRflow")
             
         self.fill1DByFlavour("after",pdgLep,1,w)

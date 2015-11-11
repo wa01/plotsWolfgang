@@ -1,6 +1,7 @@
 import ROOT
 import sys
 from math import sqrt
+from fnmatch import fnmatch
 
 canvases = [ ]
 
@@ -43,14 +44,31 @@ def getByColor(stack,color):
         assert result==None
         result = h
     return result
-  
-def getRcsRatios(stack0,stack1,color=None):
-    if color==None:
-      h0 = stack0.GetStack().Last()
-      h1 = stack1.GetStack().Last()
+
+def getByIndices(stack,indices=None):
+  if indices==None:
+    return stack.GetStack().Last()
+
+  if len(indices)==1:
+    return stack.GetHists()[indices[0]]
+
+  result = None
+  for i in indices:
+    if result==None:
+      result = stack.GetHists()[i].Clone()
     else:
-      h0 = getByColor(stack0,color)
-      h1 = getByColor(stack1,color)
+      result.Add(stack.GetHists()[i])
+  return result
+  
+def getRcsRatios(stack0,stack1,indices=None):
+#    if color==None:
+#      h0 = stack0.GetStack().Last()
+#      h1 = stack1.GetStack().Last()
+#    else:
+#      h0 = getByColor(stack0,color)
+#      h1 = getByColor(stack1,color)
+    h0 = getByIndices(stack0,indices)
+    h1 = getByIndices(stack1,indices)
 
     hrcs0 = getRcs(h0,stack0.GetName())
     hrcs0.SetFillStyle(0)
@@ -89,7 +107,7 @@ def getRcsRatios(stack0,stack1,color=None):
 #    cnv2.SetLogy(1)
     cnv2.Update()
 
-    raw_input("Enter")
+#    raw_input("Enter")
 
     return hrcsRatio
 
@@ -98,10 +116,12 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("--showcolors", dest="showcolors", action="store_true", default=False)
 parser.add_option("--color", "-c", dest="color", type="int", default=None)
+parser.add_option("--sample", "-s", dest="sample", default=None)
 (options, args) = parser.parse_args()
 
 tfs = [ ]
 stacks = [ ]
+sampleIndices = None
 for ib in [ 0, 1, 2 ]:
     cnvName = "tt"+str(ib)+"bCSRs"
     tfs.append(ROOT.TFile(args[0]+"/"+cnvName+".root"))
@@ -110,19 +130,38 @@ for ib in [ 0, 1, 2 ]:
     stack = getObjectsFromCanvas(pad,ROOT.THStack.Class())[0]
     if options.showcolors:
       for h in stack.GetHists():
-        print h.GetFillColor()
-        sys.exit(0)
+        print h,h.GetFillColor()
+      leg = getObjectsFromCanvas(pad,ROOT.TLegend.Class())[0]
+      for o in leg.GetListOfPrimitives():
+        print o,o.GetObject(),o.GetLabel()
+      sys.exit(0)
+    if options.sample!=None and sampleIndices==None:
+      sampleIndices = [ ]
+      leg = getObjectsFromCanvas(pad,ROOT.TLegend.Class())[0]
+      for io,o in enumerate(leg.GetListOfPrimitives()):
+        print o,o.GetObject(),o.GetLabel()
+        if not fnmatch(o.GetLabel(),options.sample):
+          continue
+        assert o.GetObject().GetFillColor()==stack.GetHists()[io].GetFillColor() and \
+            o.GetObject().GetMarkerStyle()==stack.GetHists()[io].GetMarkerStyle()
+        sampleIndices.append(io)
+      assert len(sampleIndices)>0
     stacks.append(stack)
+#print sampleIndices
+#sys.exit(0)
 
 print stacks
 ROOT.gROOT.cd()
-h01 = getRcsRatios(stacks[0],stacks[1],color=options.color)
-h12 = getRcsRatios(stacks[1],stacks[2],color=options.color)
+#h01 = getRcsRatios(stacks[0],stacks[1],color=options.color)
+#h12 = getRcsRatios(stacks[1],stacks[2],color=options.color)
+h01 = getRcsRatios(stacks[0],stacks[1],indices=sampleIndices)
+h12 = getRcsRatios(stacks[1],stacks[2],indices=sampleIndices)
 
 cnv = ROOT.TCanvas("cDoubleRatio","cDoubleRatio")
 canvases.append(cnv)
 h01.SetLineColor(4)
 h01.SetMarkerColor(4)
+h01.SetMaximum(1.)
 h01.Draw()
 h01.Fit("pol0","","same")
 h01.GetFunction("pol0").SetLineStyle(2)

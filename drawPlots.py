@@ -144,14 +144,21 @@ else:
                               kfactor=1., \
                               namelist=["TTWJetsToQQ_25ns","TTZToLLNuNu_25ns","TTZToQQ_25ns"], \
                               baseweights=3*[lumi],mcReweight=("nVert",hPU) ))
-    samples.append(Sample("singleTop",sampleBase,type="B",color=ROOT.kRed-7,fill=True,kfactor=1., \
+    samples.append(Sample("singleTop",sampleBase,type="B",color=ROOT.kOrange,fill=True,kfactor=1., \
                               namelist=["TToLeptons_sch", \
                                             "TToLeptons_tch", \
                                             "T_tWch", \
                                             "TBar_tWch" ], \
                               baseweights=lumi,mcReweight=("nVert",hPU) ))
-    samples.append(Sample("TTJets_LO_25ns",sampleBase,type="B",color=ROOT.kRed,fill=True, \
-                              kfactor=1.,baseweights=lumi,mcReweight=("nVert",hPU) ))
+    ttJetsDiLeptonFilter = LeptonFilter(motherPdgs=24,grandMotherPdgs=6,minLeptons=2)
+    samples.append(Sample("TTJets_LO_25ns_diLep",sampleBase,type="B",color=ROOT.kRed-3,fill=True, \
+                              kfactor=1.,namelist=["TTJets_LO_25ns"], \
+                              filter=ttJetsDiLeptonFilter, \
+                              baseweights=[lumi],mcReweight=("nVert",hPU) ))
+    samples.append(Sample("TTJets_LO_25ns_other",sampleBase,type="B",color=ROOT.kRed+3,fill=True, \
+                              kfactor=1.,namelist=["TTJets_LO_25ns"], \
+                              filter=InvertedSampleFilter(ttJetsDiLeptonFilter), \
+                              baseweights=[lumi],mcReweight=("nVert",hPU) ))
     samples.append(Sample("WJetsToLNu",sampleBase,type="B",color=4,fill=True, \
                               kfactor=1., \
                               namelist=["WJetsToLNu_HT100to200", \

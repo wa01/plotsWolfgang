@@ -203,6 +203,8 @@ class PlotsBase:
                 if self.readElist or ( \
                     ( self.preselection==None or self.preselection.accept(eh,sample) ) and \
                     ( sample.filter==None or sample.filter.accept(eh) ) ):
+                    if sample.name.startswith("TTJets"):
+                        print "Accepted for ",sample.name,":",eh.get("run"),eh.get("lumi"),eh.get("evt")                        
                     self.timers[7].resume()
                     self.fill(eh,sample,itree)
                     self.timers[7].pause()
