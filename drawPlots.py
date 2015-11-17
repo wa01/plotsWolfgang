@@ -24,6 +24,7 @@ parser.add_option("--data", dest="data", help="show data", action="store_true", 
 parser.add_option("--overwrite", "-o", dest="overwrite", help="overwrite output directory", action="store_true", default=False)
 parser.add_option("--canvasNames",dest="canvasNames",help="(comma-separated list) of canvases to show",default=None)
 parser.add_option("--writeSums", dest="writeSums",  help="write pickle file with histogram counts", action="store_false", default=True)
+parser.add_option("--luminosity", dest="luminosity", help="target luminosity", type="float", default=3000.)
 (options, args) = parser.parse_args()
 assert len(args)>0
 if options.fom=="None":
@@ -92,9 +93,10 @@ if not os.path.isdir(elistbase):
     os.mkdir(elistbase,0744)
 
 samples = []
-lumi = 3000.
-lumi = 1250.
-#lumi = 133
+#lumi = 3000.
+#lumi = 1250.
+##lumi = 133
+lumi = options.luminosity
 if options.dset=="singleMu":
     pass
 else:
@@ -159,6 +161,16 @@ else:
                               kfactor=1.,namelist=["TTJets_LO_25ns"], \
                               filter=InvertedSampleFilter(ttJetsDiLeptonFilter), \
                               baseweights=[lumi],mcReweight=("nVert",hPU) ))
+#    ttJetsDiLeptonFilter = LeptonFilter(motherPdgs=24,grandMotherPdgs=6,minLeptons=2, \
+#                                            collections=["Lep","LepFromTau"])
+#    samples.append(Sample("TTJets_LO_25ns_diEleMu",sampleBase,type="B",color=ROOT.kRed-3,fill=True, \
+#                              kfactor=1.,namelist=["TTJets_LO_25ns"], \
+#                              filter=ttJetsDiLeptonFilter, \
+#                              baseweights=[lumi],mcReweight=("nVert",hPU) ))
+#    samples.append(Sample("TTJets_LO_25ns_other1",sampleBase,type="B",color=ROOT.kRed+3,fill=True, \
+#                              kfactor=1.,namelist=["TTJets_LO_25ns"], \
+#                              filter=InvertedSampleFilter(ttJetsDiLeptonFilter), \
+#                              baseweights=[lumi],mcReweight=("nVert",hPU) ))
     samples.append(Sample("WJetsToLNu",sampleBase,type="B",color=4,fill=True, \
                               kfactor=1., \
                               namelist=["WJetsToLNu_HT100to200", \
@@ -250,7 +262,7 @@ for varname in variables:
             ROOT.gROOT.ProcessLine(".L ../../HEPHYPythonTools/scripts/root/useNiceColorPalette.C")
             ROOT.useNiceColorPalette()
             definedPalette = True
-        data, bkgs, sigs, legend = drawClass.drawStack2D(samples,histograms,cnv)
+        data, bkgs, sigs, legend, others = drawClass.drawStack2D(samples,histograms,cnv)
         if variable.uselog:
             cnv.SetLogz(1)
 
@@ -274,7 +286,7 @@ for varname in variables:
 
         if variable.uselog:
             p1.SetLogy(1)
-        data, bkgs, sigs, legend = drawClass.drawStack1D(samples,histograms,pad=p1,sumDict=sumDict)
+        data, bkgs, sigs, legend, latexs = drawClass.drawStack1D(samples,histograms,pad=p1,sumDict=sumDict)
         if data==None and bkgs==None and sigs==None and legend==None:
             continue
 #        if variable.uselog:
@@ -282,6 +294,8 @@ for varname in variables:
 
     if not options.batch:
         canvases.append(cnv)
+
+
 
     ROOT.SetOwnership(bkgs,False)
     cnv.SetName(bkgs.GetName())
@@ -293,6 +307,8 @@ for varname in variables:
             allobjects.append(bkgs)
         if legend!=None:
             allobjects.append(legend)
+#        if len(latexs)>0:
+#            allobjects.extend(latexs)
         if len(sigs)>0:
             allobjects.extend(sigs)
     if not variable.is2D() and bkgs!=None and options.fom!=None:

@@ -1,6 +1,6 @@
 class LeptonFilter:
 
-  verboseCounter = 100
+  verboseCounter = 0
 
   def expandPdgs(self,pdgs):
     if hasattr(pdgs,"__getitem__"):
@@ -66,7 +66,11 @@ class LeptonFilter:
     if LeptonFilter.verboseCounter>0:
       print allLeptons
       LeptonFilter.verboseCounter -= 1
-    return len(allLeptons[0])+len(allLeptons[1])>=self.minLeptons
+    sum = 0
+    for leps in allLeptons:
+      sum += len(leps)
+#    return len(allLeptons[0])+len(allLeptons[1])>=self.minLeptons
+    return sum>=self.minLeptons
 
 class QuarkFilter:
 

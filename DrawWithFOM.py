@@ -10,6 +10,7 @@ class DrawWithFOM:
             self.fom = options.fom.lower()
         else:
             self.fom = options.fom
+        self.luminosity = options.luminosity
         
     def getIntegralWithError(self,h):
         sum = 0.
@@ -104,6 +105,7 @@ class DrawWithFOM:
         data = None
         bkgs = None
         sigs = [ ]
+        latexs = [ ]
         legend = ROOT.TLegend(0.60,0.75,0.90,0.99)
         legend.SetBorderSize(0)
         legend.SetFillStyle(0)
@@ -179,7 +181,7 @@ class DrawWithFOM:
         print "   ",hname.ljust(10)," ".ljust(30),"{0:9.2f} +- {1:7.2f}".format(integ,einteg)
 
         if allEmpty:
-            return ( None, None, None, None )
+            return ( None, None, None, None, None )
 
         opt = ""
         if data and data.GetMaximum()>bkgs.GetStack().Last().GetMaximum():
@@ -199,11 +201,37 @@ class DrawWithFOM:
         legend.SetBit(ROOT.kCanDelete)
 #        ROOT.gPad.SetLogy(1)
 
+        hdr1 = ROOT.TLatex(0.10,1.01,"CMS preliminary")
+        hdr1.SetNDC()
+        hdr1.SetTextAlign(11)
+        hdr1.SetTextFont(62)
+        hdr1.SetTextSize(0.038)
+        hdr1.Draw()
+        hdr1.SetBit(ROOT.kCanDelete)
+        latexs.append(hdr1)
+
+        hdr2 = ROOT.TLatex(0.90,1.01,"{0:d}TeV, {1:4.2f}".format(13,self.luminosity/1000.)+" fb^{-1}")
+        hdr2.SetNDC()
+        hdr2.SetTextAlign(31)
+        hdr2.SetTextFont(62)
+        hdr2.SetTextSize(0.038)
+        hdr2.Draw()
+        hdr2.SetBit(ROOT.kCanDelete)
+        latexs.append(hdr2)
+        
+#        print "Frame",ROOT.gPad.GetXlowNDC(),ROOT.gPad.GetYlowNDC(), \
+#            ROOT.gPad.GetWNDC(),ROOT.gPad.GetHNDC()
+#        print "  frame",ROOT.gPad.GetLeftMargin(),ROOT.gPad.GetRightMargin(), \
+#            ROOT.gPad.GetTopMargin(),ROOT.gPad.GetBottomMargin()
+#        print ROOT.gPad.GetXlowNDC()+ROOT.gPad.GetLeftMargin()*ROOT.gPad.GetWNDC()
+#        print ROOT.gPad.GetXlowNDC()+(1-ROOT.gPad.GetRightMargin())*ROOT.gPad.GetWNDC()
+#        print ROOT.gPad.GetYlowNDC()+(1-ROOT.gPad.GetTopMargin())*ROOT.gPad.GetHNDC()
+
         if pad!=None:
             pad.Update()
 
-        print data, bkgs, sigs, legend 
-        return ( data, bkgs, sigs, legend )
+        print data, bkgs, sigs, legend, latexs
+        return ( data, bkgs, sigs, legend, latexs )
 
     def drawStack2D(self, samples, histograms, pad=None):
 
@@ -320,6 +348,24 @@ class DrawWithFOM:
             ROOT.gPad.SetLogz(1)
             print "Drawing signal index ",i,currpad.GetPad(i+2)
 
+        hdr1 = ROOT.TLatex(0.10,1.01,"CMS preliminary")
+        hdr1.SetNDC()
+        hdr1.SetTextAlign(13)
+        hdr1.SetTextFont(62)
+        hdr1.SetTextSize(0.038)
+        hdr1.Draw()
+        hdr1.SetBit(ROOT.kCanDelete)
+        latexs.append(hdr1)
+
+        hdr2 = ROOT.TLatex(0.90,1.01,"{0:d}TeV, {1:4.2f}".format(13,self.luminosity/1000.)+" fb^{-1}")
+        hdr2.SetNDC()
+        hdr2.SetTextAlign(33)
+        hdr2.SetTextFont(62)
+        hdr2.SetTextSize(0.038)
+        hdr2.Draw()
+        hdr2.SetBit(ROOT.kCanDelete)
+        latexs.append(hdr2)
+        
         if pad!=None:
             pad.Update()
 

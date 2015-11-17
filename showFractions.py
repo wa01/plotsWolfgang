@@ -46,6 +46,11 @@ cnv.Draw()
 pad = getObjectsFromCanvas(cnv,ROOT.TPad.Class(),"p1")[0]
 stack = getObjectsFromCanvas(pad,ROOT.THStack.Class())[0]
 
+labels = [ ]
+leg = getObjectsFromCanvas(pad,ROOT.TLegend.Class())[0]
+for le in leg.GetListOfPrimitives():
+  labels.append(le.GetLabel())
+
 htot = stack.GetStack().Last()
 nbins = htot.GetNbinsX()
 assert nbins%2==1
@@ -58,12 +63,20 @@ for sgn in [ -1, 1 ]:
   rname = "CR" if sgn<0 else "SR"
 
   hRs = [ ]
+  hRFs = [ ]
+  stackF = ROOT.THStack(rname+"Stack",rname+"Stack")
   for ih,h in enumerate(stack.GetHists()):
     hRs.append(ROOT.TH1D("h"+rname+str(ih),"h"+rname+str(ih),nreg,0.5,nreg+0.5))
     hRs[-1].SetLineColor(h.GetFillColor())
     hRs[-1].SetMarkerStyle(20)
     hRs[-1].SetMarkerColor(h.GetFillColor())
     allObjects.append(hRs[-1])
+    hRFs.append(ROOT.TH1D("h"+rname+"F"+str(ih),"h"+rname+"F"+str(ih),nreg,0.5,nreg+0.5))
+    hRFs[-1].SetFillStyle(h.GetFillStyle())
+    hRFs[-1].SetFillColor(h.GetFillColor())
+    allObjects.append(hRFs[-1])
+    stackF.Add(hRFs[-1])
+  allObjects.append(stackF)
 
   for ir in range(nreg):
     ctotal = getYield(htot,sgn*(ir+1)+nreg+1)
@@ -87,8 +100,8 @@ for sgn in [ -1, 1 ]:
         ef = sqrt(ef) / ctotal[0]**2
         hRs[ih].SetBinContent(ir+1,f)
         hRs[ih].SetBinError(ir+1,ef)
+        hRFs[ih].SetBinContent(ir+1,f)
         
-      
   for ih,h in enumerate(stack.GetHists()):
         
     if ih==0:
@@ -100,6 +113,33 @@ for sgn in [ -1, 1 ]:
     else:
       hRs[ih].Draw("same")
       hRs[ih].Draw("same hist")
+
+  assert len(labels)==len(stack.GetHists())
+
+  wlab = 18
+  wval = 6
+  werr = 4
+  print ""
+  print "Fractions for",rname
+  line = wlab*" "
+  for ir in range(nreg):
+    fmt = "{0:>"+str(wval+3+werr-2)+"s}{1:02d}"
+    line += fmt.format(rname,ir+1)
+  print line
+  for il,label in enumerate(labels):
+    fmt = "{0:"+str(wlab)+"s}"
+    line = fmt.format(label[:wlab])
+    for ir in range(nreg):
+      fmt = "{0:"+str(wval)+".1f}+-{1:"+str(werr)+".1f}%"
+      line += fmt.format(100*hRs[il].GetBinContent(ir+1),100*hRs[il].GetBinError(ir+1))
+    print line
+    
+
+  cnv.Update()
+
+  cnv = ROOT.TCanvas(rname+"F",rname+"F")
+  allObjects.append(cnv)
+  stackF.Draw()
 
   cnv.Update()
 

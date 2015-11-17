@@ -66,6 +66,7 @@ class BaselinePlots(PlotsBase):
             self.addVariable("tt1bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("tt2bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("CSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
+            self.addVariable("InclusiveRegs"+flv,2*5+1,-5.5,5.5,'b')
             self.addVariable("after"+flv,1,0.5,1.5,'b')
             for i in range(nr):
 #                rname = 'R{0:02d}'.format(i+1)
@@ -181,6 +182,15 @@ class BaselinePlots(PlotsBase):
         assert abs(lt2-lt)/lt<0.00001
         dphi = abs(self.selection.wkin.dPhi())
         self.fill1DByFlavour("dPhi",pdgLep,abs(dphi),w)
+
+        nBJets = eh.get("nBJetMedium30")
+
+        incRegSign = -1 if dphi<0.75 else +1
+        self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*1,w)
+        if nGoodJs>=3 and nGoodJs<=4 and nBJets==0:
+            self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*2,w)
+        if nGoodJs>=4 and nGoodJs<=5 and nBJets<3:
+            self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*(3+min(nBJets,2)),w)
 
         if nGoodJs<5:
             return
