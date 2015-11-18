@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+ #!/usr/bin/env python
 
 import ROOT
 import os,sys,string,math
@@ -183,8 +183,11 @@ else:
                               baseweights=7*[lumi],mcReweight=("nVert",hPU) ))
     if options.data:
 #        samples.append(Sample("SingleMuon_Run2015D",sampleBase,type="D",color=1,fill=False))
-        samples.append(Sample("SingleMuon_Run2015D_1p2fb",sampleBase,type="D",color=1,fill=False,
-                              namelist=[ "SingleMuon_Run2015D_v4", "SingleMuon_Run2015D_05Oct"] ))
+#        samples.append(Sample("SingleMuon_Run2015D_1p2fb",sampleBase,type="D",color=1,fill=False,
+#                              namelist=[ "SingleMuon_Run2015D_v4", "SingleMuon_Run2015D_05Oct"] ))
+        samples.append(Sample("Data_Run2015D_1p2fb",sampleBase,type="D",color=1,fill=False,
+                              namelist=[ "SingleMuon_Run2015D_v4", "SingleMuon_Run2015D_05Oct", \
+                                         "SingleElectron_Run2015D_v4", "SingleElectron_Run2015D_05Oct" ] ))
 
 
 ROOT.TH1.SetDefaultSumw2()
