@@ -12,7 +12,7 @@ class PreselStd:
 
     def accept(self,eh,sample):
 
-        self.preselection.set(eh)
+        self.preselection.set(eh,sample.isData())
         return self.preselection.preselection()
 
         return True

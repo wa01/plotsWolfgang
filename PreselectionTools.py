@@ -62,6 +62,10 @@ class RA40bSelection:
     def set(self,eh,isData=False):
         self.reset()
         self.isData = isData
+        if isData:
+            self.filename = eh.tree.GetCurrentFile().GetName()
+        else:
+            self.filename = None
         self.tightLeptons = tightLeptons(eh,ptmin=self.reqTightLepPt)
         if len(self.tightLeptons)>0:
             idx = self.tightLeptons[0]
@@ -109,9 +113,12 @@ class RA40bSelection:
             return False
 
         if self.isData:
-            if ( abs(self.leptonPdg)==11 and not self.triggers[0] ) or \
-               ( abs(self.leptonPdg)==13 and not self.triggers[1] ):
-                return False
+            if abs(self.leptonPdg)==11:
+                if not self.triggers[0] or self.filename.find("SingleElectron")<0:
+                    return False
+            elif abs(self.leptonPdg)==13:
+                if not self.triggers[1] or self.filename.find("SingleMuon")<0:
+                    return False
 
         if len(self.vetoLeptons)>self.reqNVetoLep:
             return False
