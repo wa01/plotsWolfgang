@@ -88,7 +88,54 @@ class QuarkFilter:
         return True
     return False
 
-  
+
+class LheHtFilter:
+  """Selects HT at LHE level: minHt <= ht < maxHt.
+  HT can be lheHT or lheHTIncoming.
+  """
+  def __init__(self,minHt=None,maxHt=None,label="lheHTIncoming"):
+    self.label = label
+    self.minHt = minHt
+    self.maxHt = maxHt
+
+  def accept(self,eh):
+    lheHt = eh.get(self.label)
+    return ( self.minHt==None or lheHt>=self.minHt ) and \
+           ( self.maxHt==None or lheHt<self.maxHt )
+
+class GenLepFilter:
+  """Selects minLeptons <= nlep <= maxLeptons.
+  Leptons can be selected from direct W decays and/or from W->tau.
+  """
+  def __init__(self,minLeptons=None,maxLeptons=None,useGenLep=True,useGenLepFromTau=False,useGenTau=True):
+    self.minLeptons = minLeptons
+    self.maxLeptons = maxLeptons
+    self.useGenLep = useGenLep
+    self.useGenLepFromTau = useGenLepFromTau
+    self.useGenTau = useGenTau
+
+  def accept(self,eh):
+    nlep = 0
+    if self.useGenLep:
+      nlep += eh.get("ngenLep")
+    if self.useGenLepFromTau:
+      nlep += eh.get("ngenLepFromTau")
+    if self.useGenLep:
+      nlep += eh.get("ngenTau")
+    return ( self.minLeptons==None or nlep>=self.minLeptons ) and \
+           ( self.maxLeptons==None or nlep<=self.maxLeptons )
+
+
+class SampleFilterAND:
+
+  def __init__(self,*filters):
+    self.filters = filters
+
+  def accept(self,eh):
+    for f in filters:
+      if not f.accept(eh):
+        return False
+    return True
 
 class InvertedSampleFilter:
 
