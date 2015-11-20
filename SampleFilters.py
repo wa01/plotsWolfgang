@@ -132,7 +132,7 @@ class SampleFilterAND:
     self.filters = filters
 
   def accept(self,eh):
-    for f in filters:
+    for f in self.filters:
       if not f.accept(eh):
         return False
     return True
