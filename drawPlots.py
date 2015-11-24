@@ -19,7 +19,7 @@ parser.add_option("-s", dest="save",  help="directory for saved plots", default=
 parser.add_option("-b", dest="batch",  help="batch mode", action="store_true", default=False)
 parser.add_option("--fomByBin", dest="fomByBin",  help="calculate fom by bin", action="store_true", default=False)
 parser.add_option("--rebin", dest="rebin",  help="rebin factor", type=int, default=1)
-parser.add_option("--dset", dest="dset", help="dataset", choices=[ "met", "singleMu", "diMu", "diEle", "isrDiMu", "isrDiNu" ], default="met" )
+parser.add_option("--dset", dest="dset", help="dataset", choices=[ "default", "v2" ], default="default" )
 parser.add_option("--data", dest="data", help="show data", action="store_true", default=False)
 parser.add_option("--overwrite", "-o", dest="overwrite", help="overwrite output directory", action="store_true", default=False)
 parser.add_option("--canvasNames",dest="canvasNames",help="(comma-separated list) of canvases to show",default=None)
@@ -75,14 +75,8 @@ if options.preselection!=None:
 #dataBase = "/home/adamwo/data/"
 dataBase = "/media/Seagate/adamwo/data/cmgTuples/"
 sampleBase = dataBase+"tuples_from_Artur/"
-if options.dset=="singleMu":
-    sampleBase += "copyMu/"
-elif options.dset=="diMu":
-    sampleBase = dataBase+"tuples_from_Artur/copyDiMu/"
-elif options.dset=="diEle":
-    sampleBase = dataBase+"tuples_from_Artur/copyDiEle/"
-elif options.dset.startswith("isr"):
-    sampleBase = dataBase+"tuples_from_Artur/copyIsr/"
+if options.dset=="v2":
+    sampleBase =  dataBase+"tuples_from_Artur/MiniAODv2/"
 else:
     pass
 #    sampleBase += "copy/"
@@ -97,8 +91,72 @@ samples = []
 #lumi = 1250.
 ##lumi = 133
 lumi = options.luminosity
-if options.dset=="singleMu":
-    pass
+
+currDir = ROOT.gDirectory
+tfPU = ROOT.TFile("puWeights.root")
+ROOT.gROOT.cd()
+hPU = tfPU.Get("puWeightsByNvert").Clone()
+currDir.cd()
+
+if options.dset=="v2":
+    samples.append(Sample("QCD",sampleBase,type="B",color=8,fill=True,kfactor=1., \
+                              namelist=["QCD_HT300to500", \
+                                            "QCD_HT500to700", \
+                                            "QCD_HT700to1000", \
+                                            "QCD_HT1000to1500", \
+                                            "QCD_HT1500to2000", \
+                                            "QCD_HT2000toInf" ], \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    samples.append(Sample("DYJetsToLL",sampleBase,type="B",color=5,fill=True, \
+                              kfactor=1., \
+                              namelist=["DYJetsToLL_M50_HT100to200", \
+                                        "DYJetsToLL_M50_HT200to400", \
+                                        "DYJetsToLL_M50_HT400to600", \
+                                        "DYJetsToLL_M50_HT600toInf" ], \
+                              baseweights=[lumi, lumi, lumi, lumi],mcReweight=("nVert",hPU) ))
+    samples.append(Sample("TTV",sampleBase,type="B",color=6,fill=True, \
+                              kfactor=1., \
+                              namelist=["TTWToQQ","TTWToLNu","TTZToQQ","TTZToLLNuNu"], \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    samples.append(Sample("singleTop",sampleBase,type="B",color=ROOT.kOrange,fill=True,kfactor=1., \
+                              namelist=["TToLeptons_sch", \
+#                                            "TToLeptons_tch", \
+                                           "T_tWch" ], \
+#                                           "T_tWch", \
+#                                            "TBar_tWch" ], \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    samples.append(Sample("TTJets_LO_HT",sampleBase,type="B",color=ROOT.kRed,fill=True, \
+                              kfactor=1.,filter=GenLepFilter(0,0), \
+                              namelist=["TTJets_LO_HT600to800","TTJets_LO_HT800to1200", \
+                                        "TTJets_LO_HT1200to2500","TTJets_LO_HT2500toInf"], \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    samples.append(Sample("TTJets_LO",sampleBase,type="B",color=ROOT.kRed,fill=True, \
+                              kfactor=1.,filter=SampleFilterAND(LheHtFilter(maxHt=600.),GenLepFilter(0,0)), \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    samples.append(Sample("TTJets_LO_DiLepton",sampleBase,type="B",color=ROOT.kBlue-3,fill=True, \
+                              kfactor=1.059, \
+                              namelist=["TTJets_DiLepton_full"], \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    samples.append(Sample("TTJets_LO_SingleLepton",sampleBase,type="B",color=ROOT.kRed,fill=True, \
+                              kfactor=1.023, \
+                              namelist=["TTJets_SingleLeptonFromT_full","TTJets_SingleLeptonFromTbar_full"], \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    samples.append(Sample("WJetsToLNu",sampleBase,type="B",color=4,fill=True, \
+                              kfactor=1., \
+                              namelist=["WJetsToLNu_HT100to200", \
+                                        "WJetsToLNu_HT200to400", \
+                                        "WJetsToLNu_HT400to600", \
+                                        "WJetsToLNu_HT600to800", \
+                                        "WJetsToLNu_HT800to1200", \
+                                        "WJetsToLNu_HT1200to2500", \
+                                        "WJetsToLNu_HT2500toInf" ], \
+                              baseweights=lumi,mcReweight=("nVert",hPU) ))
+    if options.data:
+        samples.append(Sample("Data_Run2015D_1p2fb",dataBase+"tuples_from_Artur/JECv6recalibrateMET_eleCBID_1550pb/", \
+                                  type="D",color=1,fill=False,
+                              namelist=[ "SingleMuon_Run2015D_v4", "SingleMuon_Run2015D_05Oct", \
+                                             "SingleElectron_Run2015D_v4", "SingleElectron_Run2015D_05Oct" ] ))
+
 else:
 #    samples.append(Sample("QCD",sampleBase,type="B",color=7,fill=True, \
 #                              namelist=[ "QCD20to600", "QCD600to1000", "QCD1000" ]))
@@ -121,11 +179,6 @@ else:
 #    samples.append(Sample("T2DegStop_300_270",sampleBase,type="S",color=1,line=2,fill=False))
 #    samples.append(Sample("T2DegStop_300_240",sampleBase,type="S",color=1,line=4,fill=False))
 
-    currDir = ROOT.gDirectory
-    tfPU = ROOT.TFile("puWeights.root")
-    ROOT.gROOT.cd()
-    hPU = tfPU.Get("puWeightsByNvert").Clone()
-    currDir.cd()
     samples.append(Sample("QCD",sampleBase,type="B",color=8,fill=True,kfactor=1., \
                               namelist=["QCD_HT200to300", \
                                             "QCD_HT300to500", \
