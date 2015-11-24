@@ -198,7 +198,7 @@ class RA40bSelection:
         if self.nBJets>0:
             return [ ]
 
-        if self.nJets<2 or self.nJets>3:
+        if self.nJets<3 or self.nJets>4:
             return [ ]
 
         matched = self.matchRegions(None,self.lt,self.ht)
@@ -240,7 +240,7 @@ class RA40bSelection:
         if not self.preselection():
             return False
 
-        if self.nBJets==0 and abs(self.wkin.dPhi())>0.5:
+        if self.nBJets==0 and abs(self.wkin.dPhi())>0.5 and self.nJets>4:
             return True
         if self.nBJets>0 and self.nJets>5:
             return True
