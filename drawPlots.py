@@ -30,6 +30,11 @@ assert len(args)>0
 if options.fom=="None":
     options.fom = None
 assert options.rebin>0
+
+flog = open("drawPlots.log","a")
+flog.write(" ".join(sys.argv)+"\n")
+flog.close()
+
 selectedCanvasNames = [ ]
 if options.canvasNames!=None:
     for cnvname in  options.canvasNames.split(","):
