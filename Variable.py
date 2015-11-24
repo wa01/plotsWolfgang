@@ -60,7 +60,7 @@ class VariablePair:
     return True
 
   def createHistogram(self):
-    return ROOT.TH2F(self.name,self.name,self.varx.nbins,self.varx.xmin,self.varx.xmax, \
+    return ROOT.TH2D(self.name,self.name,self.varx.nbins,self.varx.xmin,self.varx.xmax, \
                        self.vary.nbins,self.vary.xmin,self.vary.xmax)
 
   def moveBinContent(self,h,ix,iy,jx,jy):
