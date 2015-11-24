@@ -194,11 +194,14 @@ class PlotsBase:
             nall = 0
             nsel = 0
             self.timers[7].start(paused=True)
+            self.timers[8].start(paused=True)
             for iev in iterator:
 #            for iev in sample.getentries(tree):
 #            if sample.downscale==1 or (iev%sample.downscale)==0:
                 jev = iev if not self.readElist else elist.GetEntry(iev)
+                self.timers[8].resume()
                 eh.getEntry(jev)
+                self.timers[8].pause()
                 nall += 1
                 if self.readElist or ( \
                     ( self.preselection==None or self.preselection.accept(eh,sample) ) and \
@@ -218,6 +221,7 @@ class PlotsBase:
 #        for ev in tree:
 #            self.fill(ev)
             self.timers[7].stop()
+            self.timers[8].stop()
             if self.writeElist:
                 elist.Write()
             if self.writeElist or self.readElist:

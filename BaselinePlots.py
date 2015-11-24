@@ -192,8 +192,8 @@ class BaselinePlots(PlotsBase):
         if nGoodJs>=4 and nGoodJs<=5 and nBJets<3:
             self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*(3+min(nBJets,2)),w)
 
-        if nGoodJs<5:
-            return
+#        if nGoodJs<5:
+#            return
 
         self.fill1DByFlavour("nBJet",pdgLep,eh.get("nBJetMedium30"),w)
         self.fill1DByFlavour("ptLep",pdgLep,eh.get("LepGood_pt")[tightLeps[0]],w)

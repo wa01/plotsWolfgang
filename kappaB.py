@@ -173,7 +173,7 @@ parser = OptionParser()
 parser.add_option("--showcolors", dest="showcolors", action="store_true", default=False)
 parser.add_option("--color", "-c", dest="color", type="int", default=None)
 parser.add_option("--sample", "-s", dest="sample", default=None)
-parser.add_option("--sample", "-s", dest="sample", default=None)
+parser.add_option("--veto", "-v", dest="veto", default=None)
 parser.add_option("--data", "-d", dest="data", action="store_true", default=False)
 (options, args) = parser.parse_args()
 
@@ -207,15 +207,17 @@ for ib in [ 0, 1, 2 ]:
         print o,o.GetObject(),o.GetLabel()
       print allLabels
       sys.exit(0)
-    if options.sample!=None and sampleIndices['MC']==None:
+    if ( options.sample!=None or options.veto!=None ) and sampleIndices['MC']==None:
       sampleIndices['MC'] = [ ]
       for il,l in enumerate(allLabels['MC']):
-        if fnmatch(l,options.sample):
-          o = allLegends[-1]['MC'][il].GetObject()
-          h = stack.GetHists()[il]
-          print il,l,o.GetFillColor(),h.GetFillColor(),o.GetMarkerStyle(),h.GetMarkerStyle()
-          assert o.GetFillColor()==h.GetFillColor() and o.GetMarkerStyle()==h.GetMarkerStyle()
-          sampleIndices['MC'].append(il)
+          if options.sample!=None and not fnmatch(l,options.sample):
+              continue
+          if options.veto==None or not fnmatch(l,options.veto):
+              o = allLegends[-1]['MC'][il].GetObject()
+              h = stack.GetHists()[il]
+              print il,l,o.GetFillColor(),h.GetFillColor(),o.GetMarkerStyle(),h.GetMarkerStyle()
+              assert o.GetFillColor()==h.GetFillColor() and o.GetMarkerStyle()==h.GetMarkerStyle()
+              sampleIndices['MC'].append(il)
       assert len(sampleIndices)>0
 #      leg = getObjectsFromCanvas(pad,ROOT.TLegend.Class())[0]
 #      for io,o in enumerate(leg.GetListOfPrimitives()):
