@@ -47,8 +47,9 @@ class Subsample:
         nproc = None
         for l in open(base+"/"+name+"/skimAnalyzerCount/SkimReport.txt"):
             fields = l[:-1].split()
-            if len(fields)==5 and fields[0]=="All" and fields[1]=="Events":
-                nproc = int(fields[2])
+#            if len(fields)==5 and fields[0]=="All" and fields[1]=="Events":
+            if len(fields)==5 and fields[0]=="Sum" and fields[1]=="Weights":
+                nproc = float(fields[2])
                 break
         assert nproc!=None
         return nproc
@@ -59,7 +60,7 @@ class Subsample:
 class Sample:
 
     def __init__(self,name,base,namelist=None,title=None,type="B",color=1,fill=False,line=1,hatch=None, \
-                     downscale=1,filter=None,extension=False,kfactor=1.,baseweights=1.,mcReweight=None):
+                 downscale=1,filter=None,extension=False,kfactor=1.,baseweights=1.,mcReweight=None):
         self.name = name
         if namelist==None or namelist==[ ]:
             self.names = [ name ]
