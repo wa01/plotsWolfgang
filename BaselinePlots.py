@@ -46,6 +46,7 @@ class BaselinePlots(PlotsBase):
             self.addVariable("ptJet2"+flv,100,0.,1000.,'l')
             self.addVariable("ht"+flv,100,0.,2500.,'l')
             self.addVariable("lt"+flv,100,0.,2500.,'l')
+            self.addVariable("lp"+flv,100,-5,5,'b')
             self.addVariable("nBJet"+flv,10,-0.5,9.5,'b')
             self.addVariable("dPhi"+flv,63,0.,3.15,'l')
             self.addVariable("ptLep"+flv,100,0.,1000.,'b')
@@ -67,7 +68,26 @@ class BaselinePlots(PlotsBase):
             self.addVariable("tt2bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("CSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("InclusiveRegs"+flv,2*5+1,-5.5,5.5,'b')
-            self.addVariable("after"+flv,1,0.5,1.5,'b')
+            for i in range(5):
+                dPhiMin = 0.75
+                dPhiEdges = [ 0. ]
+                ddPhi = 0.125
+                while (dPhiEdges[-1]+ddPhi-dPhiMin)<0.001:
+                    dPhiEdges.append(dPhiEdges[-1]+ddPhi)
+                ddPhi = 0.25
+                while (dPhiEdges[-1]+ddPhi-1.)<0.001:
+                    dPhiEdges.append(dPhiEdges[-1]+ddPhi)
+                ddPhi = 0.70
+                while (dPhiEdges[-1]+ddPhi-3.15)<0.001:
+                    dPhiEdges.append(dPhiEdges[-1]+ddPhi)
+                self.addVariable("dPhiIncReg"+str(i+1)+flv,len(dPhiEdges)-1, \
+                                     dPhiEdges[0],dPhiEdges[-1],'l',binEdges=dPhiEdges)
+#                self.addVariable("dPhiIncReg"+str(i+1)+flv,63,0.,3.15,'b')
+                self.addVariable("metIncReg"+str(i+1)+flv,50,0.,1000.,'b')
+                self.addVariable("dPhiJet1MetIncReg"+str(i+1)+flv,16,0.,3.2,'b')
+                self.addVariable("ptLepIncReg"+str(i+1)+flv,50,0.,1000.,'b')
+                self.addVariable("isoLepIncReg"+str(i+1)+flv,40,0.,0.2,'b')
+                self.addVariable("lpIncReg"+str(i+1)+flv,40,-2.,2.,'b')
             for i in range(nr):
 #                rname = 'R{0:02d}'.format(i+1)
                 dPhiMin = RA40bSelection.regions["R"+str(i+1)][-1]
@@ -87,9 +107,10 @@ class BaselinePlots(PlotsBase):
                 self.addVariable("dPhiR"+"{0:02d}".format(i+1)+flv,len(dPhiEdges)-1, \
                                      dPhiEdges[0],dPhiEdges[-1],'l', \
                                      binEdges=dPhiEdges)
+            self.addVariable("after"+flv,1,0.5,1.5,'b')
 
             self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet4","jet2Pt80", \
-                                 "lt250","nb0","nbge1"],"DefaultCutFlow"+flv)
+                                 "lt250","nb0","nbge1"],nameFlow="DefaultCutFlow"+flv)
             csrNames = [ ]
             for i in range(13):
                 csrNames.append("CR"+str(i+1))
@@ -144,6 +165,7 @@ class BaselinePlots(PlotsBase):
                 return
         if len(self.flavours)==1:
             pdgLep = None
+        lepPt = eh.get("LepGood_pt")[tightLeps[0]]
 
         vetoLeps = vetoLeptons(eh)
         nVetoLep = len(vetoLeps)
@@ -159,20 +181,27 @@ class BaselinePlots(PlotsBase):
             return
         self.passedCutByFlavour("njet4",pdgLep,w)
 
+        jet1Pt = eh.get("Jet_pt")[goodJs[0]]
+        jet2Pt = eh.get("Jet_pt")[goodJs[1]]
+
         self.fill1DByFlavour("nVert",pdgLep,eh.get("nVert"),w)
-        self.fill1DByFlavour("ptJet1",pdgLep,eh.get("Jet_pt")[goodJs[0]],w)
-        self.fill1DByFlavour("ptJet2",pdgLep,eh.get("Jet_pt")[goodJs[1]],w)
-        if eh.get("Jet_pt")[goodJs[1]]<80.:
+        self.fill1DByFlavour("ptJet1",pdgLep,jet1Pt,w)
+        self.fill1DByFlavour("ptJet2",pdgLep,jet2Pt,w)
+        if jet2Pt<80.:
             return
         self.passedCutByFlavour("jet2Pt80",pdgLep,w)
 
-        lt = eh.get("met_pt") + eh.get("LepGood_pt")[tightLeps[0]]
+        met = eh.get("met_pt")
+        metPhi = eh.get("met_phi")
+
+        lt = met + lepPt
         self.fill1DByFlavour("lt",pdgLep,lt,w)
         if lt<250:
             return
         self.passedCutByFlavour("lt250",pdgLep,w)
 
-        if eh.get("nBJetMedium30")==0:
+        nBJets = eh.get("nBJetMedium30")
+        if nBJets==0:
             self.passedCutByFlavour("nb0",pdgLep,w)
         else:
             self.passedCutByFlavour("nbge1",pdgLep,w)
@@ -182,21 +211,35 @@ class BaselinePlots(PlotsBase):
         assert abs(lt2-lt)/lt<0.00001
         dphi = abs(self.selection.wkin.dPhi())
         self.fill1DByFlavour("dPhi",pdgLep,abs(dphi),w)
-
-        nBJets = eh.get("nBJetMedium30")
+        self.fill1DByFlavour("lp",pdgLep,self.selection.wkin.lp(),w)
 
         incRegSign = -1 if dphi<0.75 else +1
-        self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*1,w)
+        incRegs = [ 1 ]
+#        self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*1,w)
+#        self.fill1DByFlavour("dPhiIncReg1",pdgLep,dphi,w)
         if nGoodJs>=3 and nGoodJs<=4 and nBJets==0:
-            self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*2,w)
+            incRegs.append(2)
+#            self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*2,w)
+#            self.fill1DByFlavour("dPhiIncReg2",pdgLep,dphi,w)
         if nGoodJs>=4 and nGoodJs<=5 and nBJets<3:
-            self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*(3+min(nBJets,2)),w)
+            incRegs.append(3+min(nBJets,2))
+#            self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*(3+min(nBJets,2)),w)
+#            self.fill1DByFlavour("dPhiIncReg"+str(min(nBJets,2)+3),pdgLep,dphi,w)
+        for ir in incRegs:
+            self.fill1DByFlavour("InclusiveRegs",pdgLep,incRegSign*ir,w)
+            self.fill1DByFlavour("dPhiIncReg"+str(ir),pdgLep,dphi,w)
+            self.fill1DByFlavour("metIncReg"+str(ir),pdgLep,met,w)
+            jetPhi = eh.get("Jet_phi")[goodJs[0]]
+            self.fill1DByFlavour("dPhiJet1MetIncReg"+str(ir),pdgLep,abs(deltaPhi(metPhi,jetPhi)),w)
+            self.fill1DByFlavour("ptLepIncReg"+str(ir),pdgLep,lepPt,w)
+            self.fill1DByFlavour("isoLepIncReg"+str(ir),pdgLep,eh.get("LepGood_miniRelIso")[tightLeps[0]],w)
+            self.fill1DByFlavour("lpIncReg"+str(ir),pdgLep,self.selection.wkin.lp(),w)
 
 #        if nGoodJs<5:
 #            return
 
-        self.fill1DByFlavour("nBJet",pdgLep,eh.get("nBJetMedium30"),w)
-        self.fill1DByFlavour("ptLep",pdgLep,eh.get("LepGood_pt")[tightLeps[0]],w)
+        self.fill1DByFlavour("nBJet",pdgLep,nBJets,w)
+        self.fill1DByFlavour("ptLep",pdgLep,lepPt,w)
         self.fill1DByFlavour("isoLep",pdgLep,eh.get("LepGood_miniRelIso")[tightLeps[0]],w)
         self.fill1DByFlavour("dxyLep",pdgLep,eh.get("LepGood_dxy")[tightLeps[0]],w)
         self.fill1DByFlavour("dzLep",pdgLep,eh.get("LepGood_dz")[tightLeps[0]],w)
@@ -208,11 +251,11 @@ class BaselinePlots(PlotsBase):
                           eh.get("LepGood_phi")[tightLeps[0]],eh.get("LepGood_eta")[tightLeps[0]])
         self.fill1DByFlavour("jet2DRLep",pdgLep,jetDRLep,w)
         self.fill1DByFlavour("met",pdgLep,eh.get("met_pt"),w)
-        self.fill1DByFlavour("metPhi",pdgLep,eh.get("met_phi"),w)
+        self.fill1DByFlavour("metPhi",pdgLep,metPhi,w)
         jetPhi = eh.get("Jet_phi")[goodJs[0]]
-        self.fill1DByFlavour("dPhiMetJet1",pdgLep,abs(deltaPhi(eh.get("met_phi"),jetPhi)),w)
+        self.fill1DByFlavour("dPhiMetJet1",pdgLep,abs(deltaPhi(metPhi,jetPhi)),w)
         jetPhi = eh.get("Jet_phi")[goodJs[1]]
-        self.fill1DByFlavour("dPhiMetJet2",pdgLep,abs(deltaPhi(eh.get("met_phi"),jetPhi)),w)
+        self.fill1DByFlavour("dPhiMetJet2",pdgLep,abs(deltaPhi(metPhi,jetPhi)),w)
 #        assert eh.get("nBJetMedium30")==self.selection.nBJets
 #        if eh.get("nBJetMedium30")>0:
 #            return
