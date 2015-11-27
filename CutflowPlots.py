@@ -45,14 +45,8 @@ class CutflowPlots(PlotsBase):
             self.addVariable("sip3dLep"+flv,100,0.,10.,'u')
             self.addVariable("nVert"+flv,50,-0.5,49.5,'b')
 
-            self.addCutFlow(["all","ht500","oneTightLep","noVetoLep","njet5","jet2Pt80", \
-                                 "lt250","nb0","nbge1"],"DefaultCutFlow"+flv)
-            csrNames = [ ]
-            for i in range(13):
-                csrNames.append("CR"+str(i+1))
-            for i in range(13):
-                csrNames.append("SR"+str(i+1))
-            self.addCutFlow(csrNames,nameFlow="CSRflow"+flv)
+            self.addCutFlow(["all","oneTightLep","noVetoLep","njet5","jet2Pt80", \
+                                 "ht500","lt250","nb0","nbge1"],"DefaultCutFlow"+flv)
 
         curdir.cd()
 
@@ -77,18 +71,18 @@ class CutflowPlots(PlotsBase):
             pdgLep = None
         else:
             pdgLep = 0
-        self.passedCutByFlavour("before",pdgLep,w)
+        self.passedCutByFlavour("all",pdgLep,w)
 
         tightLeps = tightLeptons(eh)
         nTightLep = len(tightLeps)
         self.fill1DByFlavour("nTightLep",pdgLep,nTightLep,w)
+        if nTightLep!=1:
+            return
         self.fill1DByFlavour("ptLep",pdgLep,eh.get("LepGood_pt")[tightLeps[0]],w)
         self.fill1DByFlavour("isoLep",pdgLep,eh.get("LepGood_miniRelIso")[tightLeps[0]],w)
         self.fill1DByFlavour("dxyLep",pdgLep,eh.get("LepGood_dxy")[tightLeps[0]],w)
         self.fill1DByFlavour("dzLep",pdgLep,eh.get("LepGood_dz")[tightLeps[0]],w)
         self.fill1DByFlavour("sip3dLep",pdgLep,eh.get("LepGood_sip3d")[tightLeps[0]],w)
-        if nTightLep!=1:
-            return
         self.passedCutByFlavour("oneTightLep",pdgLep,w)
 
         vetoLeps = vetoLeptons(eh)
