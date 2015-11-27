@@ -74,17 +74,20 @@ class LepNuSystem:
 #            print dphiRS,dphiWA
 
     def pt(self):
-        return w.Pt()
+        return self.w.Pt()
 
     def lt(self):
         return self.met.Pt() + self.lepton.Pt()
+
+    def lp(self):
+        return self.lepton.Pt()/self.w.Pt()*cos(self.dPhi())
 
     def mt(self):
         dphi = self.lepton.Phi() - self.met.Phi()
         return sqrt(2.*self.lepton.Pt()*self.met.Pt()*(1-cos(dphi)))
 
     def phi(self):
-        return w.Phi()
+        return self.w.Phi()
 
     def dPhi(self):
         return deltaPhi(self.lepton.Phi(),self.w.Phi())
