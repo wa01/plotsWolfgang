@@ -10,6 +10,7 @@ class DrawWithFOM:
             self.fom = options.fom.lower()
         else:
             self.fom = options.fom
+        self.fitRatio = options.fitRatio
         self.luminosity = options.luminosity
         
     def getIntegralWithError(self,h):
@@ -79,11 +80,13 @@ class DrawWithFOM:
 
     def getDoMC(self,h1,h2):
         hr = h1.Clone(h1.GetName()+"DoMC")
+        hrmc = h1.Clone(h1.GetName()+"DoMCMC")
         if h2.InheritsFrom(ROOT.THStack.Class()):
             hsum = h2.GetStack().Last().Clone()
         else:
             hsum = h2.Clone()
         hr.Reset()
+        hrmc.Reset()
         for i in range(1,hr.GetNbinsX()+1):
             d = h1.GetBinContent(i)
             ed = h1.GetBinError(i)
@@ -92,7 +95,9 @@ class DrawWithFOM:
             if b>0:
                 hr.SetBinContent(i,d/b)
                 hr.SetBinError(i,sqrt((ed)**2+(eb*d/b)**2)/b)
-        return hr
+                hrmc.SetBinContent(i,1.)
+                hrmc.SetBinError(i,eb/b)
+        return hr,hrmc
 
 
     def drawStack1D(self, samples, histograms, pad=None, sumDict=None):
@@ -410,8 +415,15 @@ class DrawWithFOM:
             pad.cd()
 
         opt = ""
-        hr = self.getDoMC(data,bkgs)
+        hr,hrmc = self.getDoMC(data,bkgs)
         print hr,hr.GetBinContent(10),hr.GetBinError(10)
+        hrmc.SetMinimum(0.)
+        hrmc.SetMaximum(2.)
+        hrmc.GetYaxis().SetTitle("data/MC")
+        hrmc.GetYaxis().SetTitleSize(0.08)
+        hrmc.SetMarkerStyle(1)
+        hrmc.SetFillColor(18)
+        hrmc.DrawCopy("E2")
         hr.SetMinimum(0.)
         hr.SetMaximum(2.)
         hr.GetYaxis().SetTitle("data/MC")
@@ -419,7 +431,9 @@ class DrawWithFOM:
         hr.SetMarkerStyle(20)
         hr.SetMarkerColor(1)
         hr.SetLineColor(1)
-        hr.DrawCopy()
+        hr.DrawCopy("same")
+        if self.fitRatio and hr.GetNbinsX()>1:
+            hr.Fit("pol1","","same")
         ROOT.gPad.SetGridx(1)
         ROOT.gPad.SetGridy(1)
 
