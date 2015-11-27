@@ -1,4 +1,4 @@
- #!/usr/bin/env python
+#!/usr/bin/env python
 
 import ROOT
 import os,sys,string,math
@@ -14,12 +14,13 @@ parser.add_option("--preselection", "-p", dest="preselection",  help="preselecti
 parser.add_option("--draw", "-d", dest="drawClass",  help="draw class", default="DrawWithFOM.py")
 parser.add_option("--elist", "-e", dest="elist",  help="event list mode", choices=[ "w", "r", "a" ], default=None )
 parser.add_option("--fom", dest="fom",  help="fom to be used", choices=[ "sob", "sosqrtb", "dataovermc", "None" ], default="sosqrtb" )
+parser.add_option("--fitRatio", dest="fitRatio", help="fit ratio for data/MC", action="store_true", default=False)
 parser.add_option("--elistBase", dest="elistBase",  help="base directory for event lists", default="./elists")
 parser.add_option("-s", dest="save",  help="directory for saved plots", default=None)
 parser.add_option("-b", dest="batch",  help="batch mode", action="store_true", default=False)
 parser.add_option("--fomByBin", dest="fomByBin",  help="calculate fom by bin", action="store_true", default=False)
 parser.add_option("--rebin", dest="rebin",  help="rebin factor", type=int, default=1)
-parser.add_option("--dset", dest="dset", help="dataset", choices=[ "default", "v2" ], default="default" )
+parser.add_option("--dset", dest="dset", help="dataset", choices=[ "default", "v2", "v2TTLO" ], default="default" )
 parser.add_option("--data", dest="data", help="show data", action="store_true", default=False)
 parser.add_option("--overwrite", "-o", dest="overwrite", help="overwrite output directory", action="store_true", default=False)
 parser.add_option("--canvasNames",dest="canvasNames",help="(comma-separated list) of canvases to show",default=None)
@@ -80,7 +81,7 @@ if options.preselection!=None:
 #dataBase = "/home/adamwo/data/"
 dataBase = "/media/Seagate/adamwo/data/cmgTuples/"
 sampleBase = dataBase+"tuples_from_Artur/"
-if options.dset=="v2":
+if options.dset.startswith("v2"):
     sampleBase =  dataBase+"tuples_from_Artur/MiniAODv2/"
 else:
     pass
@@ -161,6 +162,12 @@ if options.dset=="v2":
                                   type="D",color=1,fill=False,
                               namelist=[ "SingleMuon_Run2015D_v4", "SingleMuon_Run2015D_05Oct", \
                                              "SingleElectron_Run2015D_v4", "SingleElectron_Run2015D_05Oct" ] ))
+
+elif options.dset=="v2TTLO":
+    samples.append(Sample("TTJets_LO",sampleBase,type="B",color=ROOT.kRed,fill=True, \
+                              kfactor=1., \
+                              baseweights=lumi ))
+#                              baseweights=lumi,mcReweight=("nVert",hPU) ))
 
 else:
 #    samples.append(Sample("QCD",sampleBase,type="B",color=7,fill=True, \
