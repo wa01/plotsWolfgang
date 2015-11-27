@@ -69,6 +69,8 @@ class Measurement:
         return Measurement(self.value_*other.value_,error=None,errorSquared=e2)
 
     def __div__(self,other):
+        if other.value_==0:
+            return Measurement(float('Inf'),float('Inf'),float('Inf'))
         v = self.value_ / other.value_
         e2 = (self.errorSquared() + v**2*other.errorSquared()) / other.value_**2
         return Measurement(v,error=None,errorSquared=e2)
@@ -102,11 +104,21 @@ class Measurement:
 
     def __idiv__(self,other):
         if type(other)==type(self):
-            self.copy(self/other)
+            if other.value_==0:
+                self.value_ = float('Inf')
+                self.error_ = float('Inf')
+                self.eSquare_ = float('Inf')
+            else:
+                self.copy(self/other)
         else:
-            self.value_ /= other
-            self.error_ /= other
-            self.eSquare_ = None
+            if other.value_==0:
+                self.value_ = float('Inf')
+                self.error_ = float('Inf')
+                self.eSquare_ = float('Inf')
+            else:
+                self.value_ /= other
+                self.error_ /= other
+                self.eSquare_ = None
         return self
 
     def __str__(self):
