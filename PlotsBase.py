@@ -13,6 +13,14 @@ class MyTimer:
         self.stop_ = 0.
         self.entries = 0
         self.sum = 0.
+        self.hLap = None
+
+    def useHistogram(self,maxTime=1000.):
+        currDir = ROOT.gDirectory
+        ROOT.gROOT.cd()
+        self.hLap = ROOT.TH1F("LapTime","LapTime",1000,0.,maxTime)
+        self.hLap.Sumw2()
+        currDir.cd()
 
     def resume(self):
         assert self.active and self.paused
@@ -28,6 +36,8 @@ class MyTimer:
 
     def pause(self):
         self.stop_ = time.clock()
+        if self.hLap!=None:
+            self.hLap.Fill(self.stop_-self.start_)
         assert self.active and not self.paused
         self.sum += self.stop_ - self.start_
         self.start_ = 0.
@@ -193,24 +203,28 @@ class PlotsBase:
 #        for iev in range(tree.GetEntries()):
             nall = 0
             nsel = 0
-            self.timers[7].start(paused=True)
-            self.timers[8].start(paused=True)
+#            self.timers[7].start(paused=True)
+#            self.timers[8].start(paused=True)
             for iev in iterator:
 #            for iev in sample.getentries(tree):
 #            if sample.downscale==1 or (iev%sample.downscale)==0:
                 jev = iev if not self.readElist else elist.GetEntry(iev)
-                self.timers[8].resume()
+#                self.timers[8].resume()
+                self.timers[8].start()
                 eh.getEntry(jev)
-                self.timers[8].pause()
+#                self.timers[8].pause()
+                self.timers[8].stop()
                 nall += 1
                 if self.readElist or ( \
                     ( self.preselection==None or self.preselection.accept(eh,sample) ) and \
                     ( sample.filter==None or sample.filter.accept(eh) ) ):
 #                    if sample.name.startswith("TTJets"):
 #                        print "Accepted for ",sample.name,":",eh.get("run"),eh.get("lumi"),eh.get("evt")                        
-                    self.timers[7].resume()
+#                    self.timers[7].resume()
+                    self.timers[7].start()
                     self.fill(eh,sample,itree)
-                    self.timers[7].pause()
+#                    self.timers[7].pause()
+                    self.timers[7].stop()
                     for timer in self.timers[:7]:
                         if timer.active:
                             timer.stop()
@@ -220,8 +234,8 @@ class PlotsBase:
 #            print "Ntot for ",sample.name,sample.names[itree]," = ",nall,nsel
 #        for ev in tree:
 #            self.fill(ev)
-            self.timers[7].stop()
-            self.timers[8].stop()
+#            self.timers[7].stop()
+#            self.timers[8].stop()
             if self.writeElist:
                 elist.Write()
             if self.writeElist or self.readElist:
