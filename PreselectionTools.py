@@ -28,11 +28,23 @@ class RA40bSelection:
         'R13' : ( [ 8, None ], [ 450, None ], [ 500, None ], 0.75 ) }
     regionLabels = sorted(regions.keys(),key = lambda x: int(x[1:]))
 
-    def __init__(self,reqNTightLep=1,reqTightLepPt=25.,reqNVetoLep=0,reqVetoLepPt=10., \
+    def __init__(self,reqNTightLep=1,reqTightLepPt=25.,reqNVetoLep=-1,reqVetoLepPt=10., \
                      reqHT=500.,reqLT=250.,reqNjet=4,reqJet2Pt=80.):
-        self.reqNTightLep = reqNTightLep
+        if type(reqNTightLep)==type( () ):
+            assert len(reqNTightLep)==2
+            if reqNTightLep[0]!=None and reqNTightLep[1]!=None:
+                assert reqNTightLep[0]<reqNTightLep[1]
+            self.reqNTightLep = reqNTightLep
+        else:
+            self.reqNTightLep = ( reqNTightLep, reqNTightLep+1 )
         self.reqTightLepPt = reqTightLepPt
-        self.reqNVetoLep = reqNVetoLep
+        if type(reqNVetoLep)==type( () ):
+            assert len(reqNVetoLep)==2
+            if reqNVetoLep[0]!=None and reqNVetoLep[1]!=None:
+                assert reqNVetoLep[0]<reqNVetoLep[1]
+            self.reqNVetoLep = reqNVetoLep
+        else:
+            self.reqNVetoLep = ( reqNVetoLep, reqNVetoLep+1 )
         self.reqVetoLepPt = reqVetoLepPt
         self.reqHT = reqHT
         self.reqLT = reqLT
@@ -106,7 +118,10 @@ class RA40bSelection:
         return True
         
     def preselection(self):
-        if len(self.tightLeptons)!=self.reqNTightLep:
+        nTight = len(self.tightLeptons)
+        if self.reqNTightLep[0]!=None and nTight<self.reqNTightLep[0]:
+            return False
+        if self.reqNTightLep[1]!=None and nTight>=self.reqNTightLep[1]:
             return False
 
         if not self.filters:
@@ -120,7 +135,10 @@ class RA40bSelection:
                 if not self.triggers[1] or self.filename.find("SingleMuon")<0:
                     return False
 
-        if len(self.vetoLeptons)>self.reqNVetoLep:
+        nVeto = len(self.vetoLeptons)
+        if self.reqNVetoLep[0]!=None and nVeto<self.reqNVetoLep[0]:
+            return False
+        if self.reqNVetoLep[1]!=None and nVeto>=self.reqNVetoLep[1]:
             return False
 
         if self.nJets<self.reqNjet:
