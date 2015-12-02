@@ -1,8 +1,9 @@
 import os
+from DatasetBase import *
 from Sample import *
 from SampleFilters import *
 
-class Dataset:
+class Dataset(DatasetBase):
 
     def __init__(self,dataBase=None,elistBase=None,lumi=1550.,hPU=None,data=False):
         DatasetBase.__init__(self,dataBase=dataBase,elistBase=elistBase, \
