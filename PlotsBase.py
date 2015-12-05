@@ -4,6 +4,7 @@ import os
 from EventHelper import EventHelper
 from Variable import *
 from CutFlow import *
+from ProgBar import *
 
 class MyTimer:
     def __init__(self):
@@ -125,7 +126,16 @@ class PlotsBase:
             if not os.path.isdir(self.preselDirName):
                 os.mkdir(self.preselDirName,0744)
         self.rebin = rebin
+        self.progress = None
          
+    def showProgressBar(self,flag=True):
+        if flag and self.progress==None:
+            self.progress = ProgBar()
+        elif self.progress!=None and not flag:
+            if self.progress.isActive():
+                self.progress.halt()
+            self.progress = None
+
     def showTimers(self):
         line = ""
         for t in self.timers:
@@ -191,12 +201,14 @@ class PlotsBase:
 #            print sample.name,itree
 #            print tree.GetEntries()
             nentries = tree.GetEntries()
+            nprog = nentries
             downscale = sample.downscale
             iterator = self.createGenerator(tree.GetEntries(),sample.downscale)
             if self.readElist or self.writeElist:
                 elist, elistFile = self.prepareElist(sample,sample.names[itree])
                 if self.readElist:
                     iterator = self.createGenerator(elist.GetN())
+                    nprog = elist.GetN()
             self.timers[6].start()
             eh = EventHelper(tree)
             self.timers[6].stop()
@@ -205,6 +217,8 @@ class PlotsBase:
             nsel = 0
 #            self.timers[7].start(paused=True)
 #            self.timers[8].start(paused=True)
+            if self.progress:
+                self.progress.initialize(length=nprog,title=sample.name+" "+sample.names[itree])
             for iev in iterator:
 #            for iev in sample.getentries(tree):
 #            if sample.downscale==1 or (iev%sample.downscale)==0:
@@ -215,6 +229,8 @@ class PlotsBase:
 #                self.timers[8].pause()
                 self.timers[8].stop()
                 nall += 1
+                if self.progress and nall%100==0:
+                    self.progress.increment(100)
                 if self.readElist or ( \
                     ( self.preselection==None or self.preselection.accept(eh,sample) ) and \
                     ( sample.filter==None or sample.filter.accept(eh) ) ):
@@ -240,6 +256,8 @@ class PlotsBase:
                 elist.Write()
             if self.writeElist or self.readElist:
                 elistFile.Close()
+            if self.progress and self.progress.status!=3:
+                    self.progress.update(1.)
         # handle under- & overflows
         for n,v in PlotsBase.variables.iteritems():
             v.moveUnderOverFlow(self.histogramList[n])
@@ -261,6 +279,11 @@ class PlotsBase:
                 self.histogramList[name+"Ele"].Fill(value,weight)        
             if pdg==0 or abs(pdg)==13:
                 self.histogramList[name+"Mu"].Fill(value,weight)        
+
+    def fill1DByCategory(self,name,category,value,weight):
+        self.histogramList[name].Fill(value,weight)
+        if category!=None:
+            self.histogramList[name+category].Fill(value,weight)        
 
     def fill1D(self,name,value,weight):
         self.fill1DBySign(name,0,value,weight)
@@ -290,3 +313,10 @@ class PlotsBase:
             if pdg==0 or abs(pdg)==13:
                 flow = PlotsBase.cutflows[nameFlow+"Mu"]
                 self.cutflowList[nameFlow+"Mu"].Fill(flow.index(label),w)
+
+    def passedCutByCategory(self,label,category,w,nameFlow="DefaultCutFlow"):
+        flow = PlotsBase.cutflows[nameFlow]
+        self.cutflowList[nameFlow].Fill(flow.index(label),w)
+        if category!=None and category!="":
+            flow = PlotsBase.cutflows[nameFlow+category]
+            self.cutflowList[nameFlow+category].Fill(flow.index(label),w)

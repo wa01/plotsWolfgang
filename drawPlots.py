@@ -27,6 +27,7 @@ parser.add_option("--overwrite", "-o", dest="overwrite", help="overwrite output 
 parser.add_option("--canvasNames",dest="canvasNames",help="(comma-separated list) of canvases to show",default=None)
 parser.add_option("--writeSums", dest="writeSums",  help="write pickle file with histogram counts", action="store_false", default=True)
 parser.add_option("--luminosity", dest="luminosity", help="target luminosity", type="float", default=3000.)
+parser.add_option("--progressBar", dest="progressBar", help="show progress bar", action="store_true", default=False)
 (options, args) = parser.parse_args()
 assert len(args)>0
 if options.fom=="None":
@@ -90,7 +91,7 @@ hPU = tfPU.Get("puWeightsByNvert").Clone()
 currDir.cd()
 
 execfile("datasets/"+options.dset+".py")
-dataset = Dataset(dataBase=dataBase,elistBase=options.elistBase,lumi=options.luminosity,hPU=hPU)
+dataset = Dataset(dataBase=dataBase,elistBase=options.elistBase,lumi=options.luminosity,hPU=hPU,data=options.data)
 sampleBase = dataset.sampleBase
 elistbase = dataset.elistBase
 samples = dataset.samples
@@ -264,6 +265,8 @@ variables = { }
 cutflows = { }
 for s in samples:
     plots = plotClass(s.name,presel,elist=options.elist,elistBase=elistbase,rebin=options.rebin,argv=plotClassArguments)
+    if options.progressBar:
+        plots.showProgressBar(True)
     if options.fomByBin:
         for v in plots.getVariables1D():
             v.scut = 'b'
@@ -411,6 +414,7 @@ for cfname,cf in cutflows.iteritems():
     axis = cf[1][0].GetXaxis()
     nbins = axis.GetNbins()
     labels = [ axis.GetBinLabel(i+1) for i in range(nbins) ]
+    ds = len(samples)*[ False ]
     cs = len(samples)*[ 0. ]
     es = len(samples)*[ 0. ]
     for i,label in enumerate(labels):
@@ -420,10 +424,12 @@ for cfname,cf in cutflows.iteritems():
         csum = 0.
         esum = 0.
         for j,s in enumerate(samples):
+            ds[j] = s.isData()
             cs[j] = cf[1][j].GetBinContent(i+1)
-            csum += cs[j]
             es[j] = cf[1][j].GetBinError(i+1)
-            esum += es[j]**2
+            if not s.isData():
+                csum += cs[j]
+                esum += es[j]**2
             line1 += "{0:15.2f}".format(cs[j])
             line2 += ("  +- "+"{0:8.2f}".format(es[j]).strip()).rjust(15)
             cfByLabels.append( ( cs[j], es[j] ) )
@@ -436,7 +442,10 @@ for cfname,cf in cutflows.iteritems():
             csum = 1.
         line1 = " ".ljust(15)
         for j in range(len(cs)):
-            line1 += "{0:7.1f} +-{1:5.1%}".format(100*cs[j]/csum,es[j]/csum)
+            if ds[j]:
+                line1 += "{0:7.3f} +-{1:5.3f}".format(cs[j]/csum,es[j]/csum)
+            else:
+                line1 += "{0:7.1f} +-{1:5.1%}".format(100*cs[j]/csum,es[j]/csum)
         print line1
 
 if oldstdout!=None:
