@@ -21,30 +21,36 @@ class DiLeptonPlots(PlotsBase):
 
         parser = OptionParser()
         parser.add_option("--splitChannels", dest="splitChannels", action="store_true", default=False)
-        parser.add_option("--channel", dest="channel", choices=[ "Ele", "Mu" ], default=None )
+        parser.add_option("--channel", dest="channel", choices=[ "EE", "MuMu", "EMu" ], default=None )
         ( self.options, args ) = parser.parse_args(argv)
         assert len(args)==0
 
-        self.addVariable("ngenLep",5,-0.5,4.5,'b')
-        self.addVariable("ngenLepFromTau",5,-0.5,4.5,'b')
-        self.addVariable("ngenTau",5,-0.5,4.5,'b')
-        self.addVariable("nTightLep",10,-0.5,9.5,'u')
-        self.addVariable("nVetoLep",10,-0.5,9.5,'u')
-        self.addVariable("wrongCharge",2,-0.5,1.5,'b')
-        self.addVariable("flavourCombination",3,-0.5,2.5,'b')
-        self.addVariable("ngenLep2l",5,-0.5,4.5,'b')
-        self.addVariable("ngenLepFromTau2l",5,-0.5,4.5,'b')
-        self.addVariable("ngenTau2l",5,-0.5,4.5,'b')
-        self.addVariable("nTightLep2l",10,-0.5,9.5,'u')
-        self.addVariable("nVetoLep2l",10,-0.5,9.5,'u')
-        self.addVariable("massTTll",60,0.,120.,'b')
-        self.addVariable("massTVll",60,0.,120.,'b')
-        self.addVariable("massTTemu",60,0.,120.,'b')
-        self.addVariable("massTVemu",60,0.,120.,'b')
-        self.addVariable("IncRegsTTll",2*5+1,-5.5,5.5,'b')
-        self.addVariable("IncRegsTVll",2*5+1,-5.5,5.5,'b')
-        self.addVariable("IncRegsTTemu",2*5+1,-5.5,5.5,'b')
-        self.addVariable("IncRegsTVemu",2*5+1,-5.5,5.5,'b')
+        if self.options.splitChannels:
+            self.flavours = [ "", "EE", "MuMu", "EMu" ]
+        else:
+            self.flavours = [ "" ]
+
+        for flv in self.flavours:
+            self.addVariable("flow"+flv,3,-0.5,2.5,'b')
+            self.addVariable("ngenLep"+flv,5,-0.5,4.5,'b')
+            self.addVariable("ngenLepFromTau"+flv,5,-0.5,4.5,'b')
+            self.addVariable("ngenTau"+flv,5,-0.5,4.5,'b')
+            self.addVariable("nTightLep"+flv,10,-0.5,9.5,'u')
+            self.addVariable("nVetoLep"+flv,10,-0.5,9.5,'u')
+            self.addVariable("wrongCharge"+flv,2,-0.5,1.5,'b')
+            self.addVariable("flavourCombination"+flv,3,-0.5,2.5,'b')
+            self.addVariable("ngenLep2l"+flv,5,-0.5,4.5,'b')
+            self.addVariable("ngenLepFromTau2l"+flv,5,-0.5,4.5,'b')
+            self.addVariable("ngenTau2l"+flv,5,-0.5,4.5,'b')
+            self.addVariable("nTightLep2l"+flv,10,-0.5,9.5,'u')
+            self.addVariable("nVetoLep2l"+flv,10,-0.5,9.5,'u')
+            self.addVariable("massTT"+flv,60,0.,120.,'b')
+            self.addVariable("massTV"+flv,60,0.,120.,'b')
+            self.addVariable("IncRegsTT"+flv,2*5+1,-5.5,5.5,'b')
+            self.addVariable("IncRegsTV"+flv,2*5+1,-5.5,5.5,'b')
+
+            self.addCutFlow(["all", "oneTight", "dilepton", \
+                                 "preselection", ],nameFlow="DefaultCutFlow"+flv)
 
         curdir.cd()
 
@@ -64,20 +70,27 @@ class DiLeptonPlots(PlotsBase):
             w = 1
         self.timers[0].stop()        
 
+        category = None
+        self.passedCutByCategory("all",category,w)
+
         self.selection.set(eh)
         nTight = len(self.selection.tightLeptons)
         nVeto = len(self.selection.vetoLeptons)
 
-        ngenLep = eh.get("ngenLep")
-        ngenTau = eh.get("ngenTau")
-        ngenLepFromTau = eh.get("ngenLepFromTau")
+        if not sample.isData():
+            ngenLep = eh.get("ngenLep")
+            ngenTau = eh.get("ngenTau")
+            ngenLepFromTau = eh.get("ngenLepFromTau")
                 
-        self.fill1D("ngenLep",ngenLep,w)
-        self.fill1D("ngenTau",ngenTau,w)
-        self.fill1D("ngenLepFromTau",ngenLepFromTau,w)
+            self.fill1DByCategory("ngenLep",category,ngenLep,w)
+            self.fill1DByCategory("ngenTau",category,ngenTau,w)
+            self.fill1DByCategory("ngenLepFromTau",category,ngenLepFromTau,w)
                     
-        self.fill1D("nTightLep",nTight,w)
-        self.fill1D("nVetoLep",nVeto,w)
+        self.fill1DByCategory("nTightLep",category,nTight,w)
+        self.fill1DByCategory("nVetoLep",category,nVeto,w)
+
+        if nTight>0:
+            self.passedCutByCategory("oneTight",category,w)
 
         pdgs = eh.get("LepGood_pdgId")
         allLeptons = self.selection.tightLeptons + self.selection.vetoLeptons
@@ -94,29 +107,36 @@ class DiLeptonPlots(PlotsBase):
                 break
             else:
                 wrongCharge = 1
-        self.fill1D("wrongCharge",wrongCharge,w)
+        self.fill1DByCategory("wrongCharge",category,wrongCharge,w)
         if idxLep2==None:
             return
 
-        flavComb = None
         if abs(pdgLep1)==11 and abs(pdgLep2)==11:
-            flavComb = 0
+            category = "EE"
         elif abs(pdgLep1)==13 and abs(pdgLep2)==13:
-            flavComb = 1
-        elif ( abs(pdgLep1)==11 and abs(pdgLep2)==13) or \
-             ( abs(pdgLep1)==13 and abs(pdgLep2)==11):
-            flavComb = 2
-        self.fill1D("flavourCombination",flavComb,w)
+            category = "MuMu"
+        elif abs(pdgLep1)==11 and abs(pdgLep2)==13:
+            category = "EMu"
+        elif abs(pdgLep1)==13 and abs(pdgLep2)==11:
+            category = "EMu"
+        self.fill1DByCategory("flavourCombination",category,self.flavours.index(category)-1,w)
+        self.passedCutByCategory("dilepton",category,w)
 
-        self.fill1D("ngenLep2l",ngenLep,w)
-        self.fill1D("ngenTau2l",ngenTau,w)
-        self.fill1D("ngenLepFromTau2l",ngenLepFromTau,w)
+        if self.options.channel!=None and category!=self.options.channel:
+            return
+
+        if not sample.isData():
+            self.fill1DByCategory("ngenLep2l",category,ngenLep,w)
+            self.fill1DByCategory("ngenTau2l",category,ngenTau,w)
+            self.fill1DByCategory("ngenLepFromTau2l",category,ngenLepFromTau,w)
                     
-        self.fill1D("nTightLep2l",nTight,w)
-        self.fill1D("nVetoLep2l",nVeto,w)
+        self.fill1DByCategory("nTightLep2l",category,nTight,w)
+        self.fill1DByCategory("nVetoLep2l",category,nVeto,w)
             
         if not self.selection.preselection():
             return
+
+        self.passedCutByCategory("preselection",category,w)
 
         lepPts = eh.get("LepGood_pt")
         lepEtas = eh.get("LepGood_eta")
@@ -131,11 +151,7 @@ class DiLeptonPlots(PlotsBase):
             hn += "T"
         else:
             hn += "V"
-        if flavComb<2:
-            hn += "ll"
-        elif flavComb==2:
-            hn += "emu"
-        self.fill1D(hn,mll,w)
+        self.fill1DByCategory(hn,category,mll,w)
 
         dphi = abs(self.selection.wkin.dPhi())
         nGoodJs = self.selection.nJets
@@ -153,11 +169,7 @@ class DiLeptonPlots(PlotsBase):
                 hn += "TT"
             else:
                 hn += "TV"
-            if flavComb<2:
-                hn += "ll"
-            elif flavComb==2:
-                hn += "emu"
-            self.fill1D(hn,incRegSign*ir,w)
+            self.fill1DByCategory(hn,category,incRegSign*ir,w)
 
 
     def showTimers(self):
