@@ -48,6 +48,11 @@ class DiLeptonPlots(PlotsBase):
             self.addVariable("massTV"+flv,60,0.,120.,'b')
             self.addVariable("IncRegsTT"+flv,2*5+1,-5.5,5.5,'b')
             self.addVariable("IncRegsTV"+flv,2*5+1,-5.5,5.5,'b')
+            nr = len(RA40bSelection.regions.keys())
+            self.addVariable("wCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
+            self.addVariable("tt0bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
+            self.addVariable("tt1bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
+            self.addVariable("tt2bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
 
             self.addCutFlow(["all", "oneTight", "dilepton", \
                                  "preselection", ],nameFlow="DefaultCutFlow"+flv)
@@ -170,6 +175,32 @@ class DiLeptonPlots(PlotsBase):
             else:
                 hn += "TV"
             self.fill1DByCategory(hn,category,incRegSign*ir,w)
+
+        if idxLep2<nTight:
+            #
+            # W+jets region:
+            #
+            wRs = self.selection.wRegions()
+            for r in wRs:
+                assert r[0]=="C" or r[0]=="S"
+                if r[0]=="C":
+                    self.fill1DByCategory("wCSRs",category,-int(r[2:]),w)
+                else:
+                    self.fill1DByCategory("wCSRs",category,int(r[2:]),w)
+            #
+            # ttbar region:
+            #
+            for ib in [ 0, 1, 2 ]:
+                ttRs = self.selection.ttRegions(ib)
+                for r in ttRs:
+                    assert r[0]=="C" or r[0]=="S"
+                    hn = "tt" + str(ib) + "bCSRs"
+                    if r[0]=="C":
+                        self.fill1DByCategory(hn,category,-int(r[2:]),w)
+                    else:
+                        self.fill1DByCategory(hn,category,int(r[2:]),w)
+            
+
 
 
     def showTimers(self):
