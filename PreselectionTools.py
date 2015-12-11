@@ -28,7 +28,7 @@ class RA40bSelection:
         'R13' : ( [ 8, None ], [ 450, None ], [ 500, None ], 0.75 ) }
     regionLabels = sorted(regions.keys(),key = lambda x: int(x[1:]))
 
-    def __init__(self,reqNTightLep=1,reqTightLepPt=25.,reqNVetoLep=-1,reqVetoLepPt=10., \
+    def __init__(self,reqNTightLep=1,reqTightLepPt=25.,reqNVetoLep=0,reqVetoLepPt=10., \
                      reqHT=500.,reqLT=250.,reqNjet=4,reqJet2Pt=80.):
         if type(reqNTightLep)==type( () ):
             assert len(reqNTightLep)==2
@@ -264,4 +264,3 @@ class RA40bSelection:
             return True
 
         return False
-
