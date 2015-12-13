@@ -3,6 +3,7 @@ import sys
 from math import sqrt
 from fnmatch import fnmatch
 from CanvasUtilities import *
+from Measurement import *
 
 canvases = [ ]
 
@@ -31,6 +32,18 @@ def getYields(hists,ibin):
   result = [ ]
   for h in hists:
     result.append( getYield(h,ibin) )
+  return result
+
+def getSumYield(hist):
+  result = Measurement()
+  for i in range(hist.GetNbinsX()):
+    result += Measurement(hist.GetBinContent(i+1), hist.GetBinError(i+1))
+  return ( result.value(), result.error() )
+
+def getSumYields(hists):
+  result = [ ]
+  for h in hists:
+    result.append( getSumYield(h) )
   return result
 
 from optparse import OptionParser
@@ -100,14 +113,22 @@ if options.listSamples:
 
 htot = stack.GetStack().Last()
 nbins = htot.GetNbinsX()
-assert nbins%2==1
-nreg = (nbins-1)/2
+if not options.integral:
+  assert nbins%2==1
+  nreg = (nbins-1)/2
+  sgns = [ -1, 1 ]
+else:
+  nreg = 1
+  sgns = [ None ]
 
 ROOT.gROOT.cd()
 allObjects = [ ]
-for sgn in [ -1, 1 ]:
+for sgn in sgns:
 
-  rname = "CR" if sgn<0 else "SR"
+  if sgn!=None:
+    rname = "CR" if sgn<0 else "SR"
+  else:
+    rname = "Sum"
 
   hRs = [ ]
   hRFs = [ ]
@@ -129,12 +150,20 @@ for sgn in [ -1, 1 ]:
 
   for ih,n in enumerate(groupNames):
     h = groupHistos[ih]
-    hRs.append(ROOT.TH1D("h"+rname+str(ih),"h"+rname+str(ih),nreg,0.5,nreg+0.5))
+    if options.integral:
+      hn = "h"+rname+str(ih)
+    else:
+      hn = "h"+rname
+    hRs.append(ROOT.TH1D(hn,hn,nreg,0.5,nreg+0.5))
     hRs[-1].SetLineColor(h.GetFillColor())
     hRs[-1].SetMarkerStyle(20)
     hRs[-1].SetMarkerColor(h.GetFillColor())
     allObjects.append(hRs[-1])
-    hRFs.append(ROOT.TH1D("h"+rname+"F"+str(ih),"h"+rname+"F"+str(ih),nreg,0.5,nreg+0.5))
+    if options.integral:
+      hn = "h"+rname+"F"+str(ih)
+    else:
+      hn = "h"+rname+"F"
+    hRFs.append(ROOT.TH1D(hn,hn,nreg,0.5,nreg+0.5))
     hRFs[-1].SetFillStyle(h.GetFillStyle())
     hRFs[-1].SetFillColor(h.GetFillColor())
     allObjects.append(hRFs[-1])
@@ -142,8 +171,13 @@ for sgn in [ -1, 1 ]:
   allObjects.append(stackF)
 
   for ir in range(nreg):
-    ctotal = getYield(htot,sgn*(ir+1)+nreg+1)
-    csamples = getYields(groupHistos,sgn*(ir+1)+nreg+1)
+    if not options.integral:
+      ctotal = getYield(htot,sgn*(ir+1)+nreg+1)
+      csamples = getYields(groupHistos,sgn*(ir+1)+nreg+1)
+    else:
+      ctotal = getSumYield(htot)
+      csamples = getSumYields(groupHistos)
+      
 
     sv = 0.
     se2 = 0.
@@ -190,8 +224,12 @@ for sgn in [ -1, 1 ]:
   print "Fractions for",rname
   line = wlab*" "
   for ir in range(nreg):
-    fmt = "{0:>"+str(wval+3+werr-2)+"s}{1:02d}"
-    line += fmt.format(rname,ir+1)
+    if options.integral:
+      fmt = "{0:>"+str(wval+3+werr)+"s}"
+      line += fmt.format(rname)
+    else:
+      fmt = "{0:>"+str(wval+3+werr-2)+"s}{1:02d}"
+      line += fmt.format(rname,ir+1)
   print line
   for il,label in enumerate(groupNames):
     fmt = "{0:"+str(wlab)+"s}"
