@@ -35,21 +35,68 @@ def getYields(hists,ibin):
 
 from optparse import OptionParser
 parser = OptionParser()
+parser.add_option("-b", dest="batch", action="store_true", default=False)
 parser.add_option("--showcolors", dest="showcolors", action="store_true", default=False)
+parser.add_option("--integral", dest="integral", action="store_true", default=False)
 parser.add_option("--color", "-c", dest="color", type="int", default=None)
-parser.add_option("--sample", "-s", dest="sample", default=None)
+parser.add_option("--listSamples", "-l", dest="listSamples", action="store_true", default=False)
+parser.add_option("--sampleNames", "-s", dest="sampleNames", action="append")
 (options, args) = parser.parse_args()
+
+print options.sampleNames
+
+matchToGroup = { }
+if options.sampleNames!=None:
+  for gNames in options.sampleNames:
+    fields = gNames.split(":")
+    assert len(fields)==2
+    matchToGroup[fields[0]] = fields[1].split(",")
 
 tf = ROOT.TFile(args[0])
 cnv = getObjectsFromDirectory(tf,ROOT.TCanvas.Class())[0]
-cnv.Draw()
+if not options.batch:
+  cnv.Draw()
 pad = getObjectsFromCanvas(cnv,ROOT.TPad.Class(),"p1")[0]
 stack = getObjectsFromCanvas(pad,ROOT.THStack.Class())[0]
 
 labels = [ ]
+colors = [ ]
+markers = [ ]
+groupNames = [ ]
+groupIndices = { }
+nh = 0
 leg = getObjectsFromCanvas(pad,ROOT.TLegend.Class())[0]
 for le in leg.GetListOfPrimitives():
-  labels.append(le.GetLabel())
+  o = le.GetObject()
+  if o.GetFillStyle()==0 or o.GetFillColor()==0:
+    print "Found data histogram",le.GetLabel()
+    continue
+  label = le.GetLabel()
+  labels.append(label)  
+  colors.append(o.GetFillColor())
+  markers.append(o.GetMarkerStyle())
+  matched = False
+  for g in matchToGroup:
+    for m in matchToGroup[g]:
+      print label,m,fnmatch(label,m)
+      if fnmatch(label,m):
+        if not g in groupIndices:
+          groupIndices[g] = [ ]
+          groupNames.append(g)
+        groupIndices[g].append(nh)
+        matched = True
+        break
+  if not matched:
+    assert not label in groupIndices
+    groupIndices[label] = [ nh ]
+    groupNames.append(label)
+  nh += 1
+if options.listSamples:
+  print "List of sample names:"
+  for l in labels:
+    print l
+  print groupNames
+  sys.exit(0)
 
 htot = stack.GetStack().Last()
 nbins = htot.GetNbinsX()
@@ -65,7 +112,23 @@ for sgn in [ -1, 1 ]:
   hRs = [ ]
   hRFs = [ ]
   stackF = ROOT.THStack(rname+"Stack",rname+"Stack")
-  for ih,h in enumerate(stack.GetHists()):
+
+  stackHistos = stack.GetHists()
+  groupHistos = [ ]
+  for gn in groupNames:
+    h = None
+    for ig in groupIndices[gn]:
+      hStack = stackHistos[ig]
+      assert hStack.GetFillColor()==colors[ig]
+      assert hStack.GetMarkerStyle()==markers[ig]
+      if h==None:
+        h = stackHistos[ig].Clone()
+      else:
+        h.Add(stackHistos[ig])
+    groupHistos.append(h)
+
+  for ih,n in enumerate(groupNames):
+    h = groupHistos[ih]
     hRs.append(ROOT.TH1D("h"+rname+str(ih),"h"+rname+str(ih),nreg,0.5,nreg+0.5))
     hRs[-1].SetLineColor(h.GetFillColor())
     hRs[-1].SetMarkerStyle(20)
@@ -80,7 +143,7 @@ for sgn in [ -1, 1 ]:
 
   for ir in range(nreg):
     ctotal = getYield(htot,sgn*(ir+1)+nreg+1)
-    csamples = getYields(stack.GetHists(),sgn*(ir+1)+nreg+1)
+    csamples = getYields(groupHistos,sgn*(ir+1)+nreg+1)
 
     sv = 0.
     se2 = 0.
@@ -92,7 +155,7 @@ for sgn in [ -1, 1 ]:
     if ctotal[1]>1e-6:
       assert abs(ctotal[1]**2-se2)/ctotal[1]**2<1.e-4
 
-    for ih,h in enumerate(stack.GetHists()):
+    for ih,n in enumerate(groupNames):
       c = csamples[ih][0]
       if ctotal[0]>1.e-4:
         f = c / ctotal[0]
@@ -102,7 +165,11 @@ for sgn in [ -1, 1 ]:
         hRs[ih].SetBinError(ir+1,ef)
         hRFs[ih].SetBinContent(ir+1,f)
         
-  for ih,h in enumerate(stack.GetHists()):
+  print groupNames
+  print len(groupHistos)
+  print len(groupNames)
+
+  for ih,h in enumerate(groupHistos):
         
     if ih==0:
       cnv = ROOT.TCanvas(rname,rname)
@@ -114,7 +181,7 @@ for sgn in [ -1, 1 ]:
       hRs[ih].Draw("same")
       hRs[ih].Draw("same hist")
 
-  assert len(labels)==len(stack.GetHists())
+#  assert len(labels)==len(groupHistos)
 
   wlab = 18
   wval = 6
@@ -126,7 +193,7 @@ for sgn in [ -1, 1 ]:
     fmt = "{0:>"+str(wval+3+werr-2)+"s}{1:02d}"
     line += fmt.format(rname,ir+1)
   print line
-  for il,label in enumerate(labels):
+  for il,label in enumerate(groupNames):
     fmt = "{0:"+str(wlab)+"s}"
     line = fmt.format(label[:wlab])
     for ir in range(nreg):
