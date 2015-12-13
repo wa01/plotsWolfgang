@@ -431,10 +431,11 @@ class DrawWithFOM:
         hr.SetMarkerStyle(20)
         hr.SetMarkerColor(1)
         hr.SetLineColor(1)
-        hr.DrawCopy("same")
         if self.fitRatio and hr.GetNbinsX()>1:
-            hr.Fit("pol1","","same")
+            hr.Fit("pol1","","0")
+        hr.DrawCopy("same")
         ROOT.gPad.SetGridx(1)
         ROOT.gPad.SetGridy(1)
 
         pad.Update()
+

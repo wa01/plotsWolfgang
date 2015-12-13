@@ -53,6 +53,15 @@ class DiLeptonPlots(PlotsBase):
             self.addVariable("tt0bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("tt1bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
             self.addVariable("tt2bCSRs"+flv,2*nr+1,-nr-0.5,nr+0.5,'b')
+            self.addVariable("met"+flv,50,0.,1000.,'b')
+            self.addVariable("ptLep"+flv,50,0.,1000.,'b')
+            self.addVariable("ht"+flv,50,0.,2500.,'l')
+            self.addVariable("lt"+flv,50,0.,2500.,'l')
+            self.addVariable("lp"+flv,50,-5,5,'b')
+            self.addVariable("dPhi"+flv,63,0.,3.15,'l')
+            self.addVariable("nJet30"+flv,20,-0.5,19.5,'l')
+            self.addVariable("nBJet"+flv,10,-0.5,9.5,'b')
+            self.addVariable("ptJet2"+flv,50,0.,1000.,'l')
 
             self.addCutFlow(["all", "oneTight", "dilepton", \
                                  "preselection", ],nameFlow="DefaultCutFlow"+flv)
@@ -200,7 +209,18 @@ class DiLeptonPlots(PlotsBase):
                     else:
                         self.fill1DByCategory(hn,category,int(r[2:]),w)
             
-
+            #
+            #
+            #
+            self.fill1DByCategory("met",category,self.selection.met,w)
+            self.fill1DByCategory("ptLep",category,self.selection.leptonPt,w)
+            self.fill1DByCategory("ht",category,self.selection.ht,w)
+            self.fill1DByCategory("lt",category,self.selection.wkin.lt(),w)
+            self.fill1DByCategory("lp",category,self.selection.wkin.lp(),w)
+            self.fill1DByCategory("dPhi",category,dphi,w)
+            self.fill1DByCategory("nJet30",category,self.selection.nJets,w)
+            self.fill1DByCategory("nBJet",category,self.selection.nBJets,w)
+            self.fill1DByCategory("ptJet2",category,self.selection.jet2Pt,w)
 
 
     def showTimers(self):
