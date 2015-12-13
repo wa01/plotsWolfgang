@@ -1,6 +1,7 @@
 import ROOT
 import ctypes
 from math import *
+import sys
 
 class DrawWithFOM:
 
@@ -407,7 +408,7 @@ class DrawWithFOM:
 
         pad.Update()
 
-    def drawDoMC(self, data, bkgs, pad=None):
+    def drawDoMC(self, data, bkgs, otherObjects, pad=None):
 
         assert data!=None and bkgs!=None
 
@@ -431,11 +432,53 @@ class DrawWithFOM:
         hr.SetMarkerStyle(20)
         hr.SetMarkerColor(1)
         hr.SetLineColor(1)
-        if self.fitRatio and hr.GetNbinsX()>1:
-            hr.Fit("pol1","","0")
         hr.DrawCopy("same")
+        if self.fitRatio and hr.GetNbinsX()>1:
+#            hr.Fit("pol1","","0")
+            fitGraphs = self.fitRatioHistogram(hr,"pol1")
+            if fitGraphs!=None:
+                for g in fitGraphs:
+                    g.Draw("c")
+                    g.SetBit(ROOT.kCanDelete)
+                    otherObjects.append(g)
         ROOT.gPad.SetGridx(1)
         ROOT.gPad.SetGridy(1)
 
         pad.Update()
 
+    def evaluatePol1(self,x,pars,cov):
+        return ( pars[0]+x*pars[1], \
+                 sqrt(cov(0,0)+2*x*cov(1,0)+x*x*cov(1,1)) )
+
+    def fitEnvelopePol1(self,hr,pars,cov):
+        result = ( ROOT.TGraph(), ROOT.TGraph(), ROOT.TGraph() )
+        result[1].SetLineStyle(2)
+        result[2].SetLineStyle(2)
+        axis = hr.GetXaxis()
+        for i in range(axis.GetNbins()+1):
+            x = axis.GetBinUpEdge(i)
+            y,ey = self.evaluatePol1(x,pars,cov)
+            result[0].SetPoint(i,x,y)
+            result[1].SetPoint(i,x,y-ey)
+            result[2].SetPoint(i,x,y+ey)
+        return result
+            
+    def fitRatioHistogram(self,hr,func):
+        if func!="pol1":
+            return None
+        print "Starting fit",hr.GetName()
+        sys.stdout.flush()
+        fitResult = hr.Fit(func,"SN0")
+        print fitResult
+        print fitResult.Status(),fitResult.IsValid()
+        sys.stdout.flush()
+        if fitResult and fitResult.IsValid():
+            npars = fitResult.NPar()
+            pars = fitResult.Parameters()
+            cov = fitResult.GetCovarianceMatrix()
+            print pars
+            print sqrt(cov(0,0)),cov(1,0),sqrt(cov(1,1))
+            print fitResult.ParError(0),fitResult.ParError(1)
+            graphs = self.fitEnvelopePol1(hr,pars,cov)
+            return graphs
+        return None

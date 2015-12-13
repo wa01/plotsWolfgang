@@ -373,6 +373,7 @@ for varname in variables:
     ROOT.SetOwnership(bkgs,False)
     cnv.SetName(bkgs.GetName())
     cnv.SetTitle(bkgs.GetName())
+    otherObjects = [ ]
     if not options.batch:
         if data!=None:
             allobjects.append(data)
@@ -386,8 +387,8 @@ for varname in variables:
             allobjects.extend(sigs)
     if not variable.is2D() and bkgs!=None and options.fom!=None:
 #        drawClass.drawSoB(bkgs,sigs,variable.scut,pad=p2)
-        if data!=None and options.fom=="dataovermc":
-            drawClass.drawDoMC(data,bkgs,pad=p2)
+        if data!=None and options.fom=="dataovermc" and data.GetEntries()>0:
+            drawClass.drawDoMC(data,bkgs,otherObjects,pad=p2)
         elif variable.scut!=None:
             drawClass.drawFom(bkgs,sigs,variable.scut,pad=p2)
     cnv.Update()
