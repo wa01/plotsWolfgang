@@ -26,7 +26,7 @@ canvases = [ ]
 #  return result
 
 def getYield(hist,ibin):
-  return ( hist.GetBinContent(ibin), hist.GetBinError(ibin) )
+  return Measurement(hist.GetBinContent(ibin),hist.GetBinError(ibin))
 
 def getYields(hists,ibin):
   result = [ ]
@@ -38,7 +38,7 @@ def getSumYield(hist):
   result = Measurement()
   for i in range(hist.GetNbinsX()):
     result += Measurement(hist.GetBinContent(i+1), hist.GetBinError(i+1))
-  return ( result.value(), result.error() )
+  return result
 
 def getSumYields(hists):
   result = [ ]
@@ -180,20 +180,20 @@ for sgn in sgns:
     sv = 0.
     se2 = 0.
     for c in csamples:
-      sv += c[0]
-      se2 += c[1]**2
-    if ctotal[0]>1e-6:
-      assert abs(ctotal[0]-sv)/ctotal[0]<1.e-4
-    if ctotal[1]>1e-6:
-      assert abs(ctotal[1]**2-se2)/ctotal[1]**2<1.e-4
-#    print "Total:",ir,ctotal[0]
+      sv += c.value()
+      se2 += c.error()**2
+    if ctotal.value()>1e-6:
+      assert abs(ctotal.value()-sv)/ctotal.value()<1.e-4
+    if ctotal.error()>1e-6:
+      assert abs(ctotal.error()**2-se2)/ctotal.error()**2<1.e-4
+#    print "Total:",ir,ctotal.value()
 
     for ih,n in enumerate(groupNames):
-      c = csamples[ih][0]
-      if ctotal[0]>1.e-4:
-        f = c / ctotal[0]
-        ef = ctotal[0]*(ctotal[0]-2*c)*csamples[ih][1]**2 + (c*ctotal[1])**2
-        ef = sqrt(ef) / ctotal[0]**2
+      c = csamples[ih].value()
+      if ctotal.value()>1.e-4:
+        f = c / ctotal.value()
+        ef = ctotal.value()*(ctotal.value()-2*c)*csamples[ih].error()**2 + (c*ctotal.error())**2
+        ef = sqrt(ef) / ctotal.value()**2
         hRs[ih].SetBinContent(ir+1,f)
         hRs[ih].SetBinError(ir+1,ef)
         hRFs[ih].SetBinContent(ir+1,f)
