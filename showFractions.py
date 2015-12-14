@@ -56,7 +56,6 @@ parser.add_option("--listSamples", "-l", dest="listSamples", action="store_true"
 parser.add_option("--sampleNames", "-s", dest="sampleNames", action="append")
 (options, args) = parser.parse_args()
 
-print options.sampleNames
 
 matchToGroup = { }
 if options.sampleNames!=None:
@@ -91,7 +90,6 @@ for le in leg.GetListOfPrimitives():
   matched = False
   for g in matchToGroup:
     for m in matchToGroup[g]:
-      print label,m,fnmatch(label,m)
       if fnmatch(label,m):
         if not g in groupIndices:
           groupIndices[g] = [ ]
@@ -188,6 +186,7 @@ for sgn in sgns:
       assert abs(ctotal[0]-sv)/ctotal[0]<1.e-4
     if ctotal[1]>1e-6:
       assert abs(ctotal[1]**2-se2)/ctotal[1]**2<1.e-4
+#    print "Total:",ir,ctotal[0]
 
     for ih,n in enumerate(groupNames):
       c = csamples[ih][0]
@@ -199,9 +198,6 @@ for sgn in sgns:
         hRs[ih].SetBinError(ir+1,ef)
         hRFs[ih].SetBinContent(ir+1,f)
         
-  print groupNames
-  print len(groupHistos)
-  print len(groupNames)
 
   for ih,h in enumerate(groupHistos):
         
