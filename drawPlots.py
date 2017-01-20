@@ -21,7 +21,7 @@ parser.add_option("-b", dest="batch",  help="batch mode", action="store_true", d
 parser.add_option("--fomByBin", dest="fomByBin",  help="calculate fom by bin", action="store_true", default=False)
 parser.add_option("--rebin", dest="rebin",  help="rebin factor", type=int, default=1)
 #parser.add_option("--dset", dest="dset", help="dataset", choices=[ "v1", "v2", "v2TTLO" ], default="v1" )
-parser.add_option("--dset", dest="dset", help="dataset", default="v2" )
+parser.add_option("--dset", dest="dset", help="dataset", default="v1" )
 parser.add_option("--data", dest="data", help="show data", action="store_true", default=False)
 parser.add_option("--overwrite", "-o", dest="overwrite", help="overwrite output directory", action="store_true", default=False)
 parser.add_option("--canvasNames",dest="canvasNames",help="(comma-separated list) of canvases to show",default=None)
@@ -81,13 +81,16 @@ if options.preselection!=None:
     setattr(presel,"sourcefile",options.preselection)
 
 #dataBase = "/home/adamwo/data/"
-dataBase = "/media/Seagate/adamwo/data/cmgTuples/"
+dataBase = "/media/Seagate/adamwo/data/RA4Moriond2017/"
 lumi = options.luminosity
 
 currDir = ROOT.gDirectory
-tfPU = ROOT.TFile("puWeights.root")
-ROOT.gROOT.cd()
-hPU = tfPU.Get("puWeightsByNvert").Clone()
+if os.path.exists("puWeights.root"):
+    tfPU = ROOT.TFile("puWeights.root")
+    ROOT.gROOT.cd()
+    hPU = tfPU.Get("puWeightsByNvert").Clone()
+else:
+    hPU = None
 currDir.cd()
 
 execfile("datasets/"+options.dset+".py")
