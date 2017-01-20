@@ -10,7 +10,8 @@ class Subsample:
         if namelist==None or namelist==[ ]:
             self.names = [ name ]
             if not type.lower()=="d":
-                nproc = self.getCmgInputStat(base,name)
+#                nproc = self.getCmgInputStat(base,name)
+                nproc = 1
                 self.baseweights = [ float(baseweights)/nproc ]
             else:
                 self.baseweights = [ 1. ]
