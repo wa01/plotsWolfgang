@@ -23,7 +23,8 @@ class Subsample:
                 assert len(namelist)==len(baseweights)
             for i,n in enumerate(namelist):
                 if not type.lower()=="d":
-                    nproc = self.getCmgInputStat(base,namelist[i])
+#                    nproc = self.getCmgInputStat(base,namelist[i])
+                    nproc = 1
                     if bwList:
                         self.baseweights.append(float(baseweights[i])/nproc)
                     else:
@@ -66,7 +67,8 @@ class Sample:
         if namelist==None or namelist==[ ]:
             self.names = [ name ]
             if not type.lower()=="d":
-                nproc = self.getCmgInputStat(base,name)
+#                nproc = self.getCmgInputStat(base,name)
+                nproc = 1
                 self.baseweights = [ float(baseweights)/nproc ]
             else:
                 self.baseweights = [ 1. ]
@@ -78,7 +80,8 @@ class Sample:
                 assert len(namelist)==len(baseweights)
             for i,n in enumerate(namelist):
                 if not type.lower()=="d":
-                    nproc = self.getCmgInputStat(base,namelist[i])
+#                    nproc = self.getCmgInputStat(base,namelist[i])
+                    nproc = 1
                     if bwList:
                         self.baseweights.append(float(baseweights[i])/nproc)
                     else:
